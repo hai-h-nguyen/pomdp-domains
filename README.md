@@ -10,8 +10,8 @@ If you use this repo in your published work, please cite as
 
 ```
 @misc{nguyen2021penvs,
-  author={Nguyen, Hai},
-  title={Pomdp Domains},
+  author={Hai, Nguyen},
+  title={Pomdp Robot Domains},
   year={2021},
   publisher={GitHub},
   journal={GitHub repository},
