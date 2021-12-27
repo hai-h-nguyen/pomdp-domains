@@ -31,7 +31,7 @@ class BoxEnv(gym.Env):
         #################### END CONFIGS #######################
 
         # mujoco-py
-        xml_path = Path(__file__).resolve().parent / 'assets' / 'four_boxes.xml'
+        xml_path = Path(__file__).resolve().parent / 'assets' / 'two_boxes.xml'
         self.model = mujoco_py.load_model_from_path(str(xml_path))
         self.sim = mujoco_py.MjSim(self.model)
         self.viewer = None  # Initializes only when self.render() is called.
@@ -49,8 +49,6 @@ class BoxEnv(gym.Env):
         self.big_box_bid = self.model.body_name2id('big_box')
         self.big_box_2_bid = self.model.body_name2id('big_box_2')
 
-        self.subgoal1_bid = self.model.site_name2id('subgoal1')
-        self.subgoal2_bid = self.model.site_name2id('subgoal2')
         self.lregion_bid = self.model.site_name2id('left_boundary')
         self.rregion_bid = self.model.site_name2id('right_boundary')        
 

@@ -1,5 +1,3 @@
-<!--# Created by Xinchao Song on June 30, 2019.-->
-
 <mujoco model="The 1-D Box Model">
     <compiler angle="radian"/>
 
@@ -52,8 +50,8 @@
             <geom name="big_box_2" rgba="1 0 0 1" class="big_cube"/>
         </body>
 
-        <site name="subgoal1" size="2" pos="0 0 0.1" rgba="0 1 0 0.5" type="sphere"/>
-        <site name="subgoal2" size="2" pos="0 0 0.1" rgba="1 0 0 0.0" type="sphere"/>
+        <!-- <site name="subgoal1" size="2" pos="0 0 0.1" rgba="0 1 0 0.5" type="sphere"/> -->
+        <!-- <site name="subgoal2" size="2" pos="0 0 0.1" rgba="1 0 0 0.0" type="sphere"/> -->
 
         <site name="left_boundary" size="2" pos="40 0 0.5" rgba="1 1 0 0.0" type="sphere"/>
         <site name="right_boundary" size="2" pos="60 0 0.5" rgba="1 1 0 0.0" type="sphere"/>
