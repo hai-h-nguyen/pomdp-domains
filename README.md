@@ -1,4 +1,4 @@
-This is the repo that store several pomdp domains that I use for my research.
+This is the repo that stores several pomdp domains that I use for my research.
 
 ### Setup
 - Install `pip3 install -e .`
