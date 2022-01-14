@@ -35,7 +35,7 @@ If you use this repo in your published work, please cite as
 
 ```
 @misc{nguyen2021penvs,
-  author={Hai, Nguyen},
+  author={Nguyen, Hai},
   title={Pomdp Robot Domains},
   year={2021},
   publisher={GitHub},
