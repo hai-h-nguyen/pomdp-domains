@@ -4,6 +4,7 @@ import numpy as np
 import gym
 from gym import spaces
 from gym.utils import seeding
+import socket
 from gym.envs.classic_control import rendering as visualize
 
 
@@ -58,13 +59,7 @@ class CarEnv(gym.Env):
             dtype=np.float32
         )
 
-        self.state_space = spaces.Box(
-            low=self.low_state,
-            high=self.high_state,
-            dtype=np.float32
-        )
-
-        self.seed()
+        self.seed(seed)
 
         self.max_ep_length = 160
 
@@ -86,7 +81,7 @@ class CarEnv(gym.Env):
         position += velocity
         if (position > self.max_position): position = self.max_position
         if (position < self.min_position): position = self.min_position
-        if (position == self.min_position and velocity < 0): velocity = 0
+        if (position==self.min_position and velocity<0): velocity = 0
 
         max_position = max(self.heaven_position, self.hell_position)
         min_position = min(self.heaven_position, self.hell_position)
@@ -95,21 +90,21 @@ class CarEnv(gym.Env):
             position >= max_position or position <= min_position
         )
 
-        env_reward = -1
+        env_reward = 0.0
 
         if (self.heaven_position > self.hell_position):
             if (position >= self.heaven_position):
-                env_reward = 100.0
+                env_reward = 1.0
 
             if (position <= self.hell_position):
-                env_reward = -100.0
+                env_reward = -1.0
 
         if (self.heaven_position < self.hell_position):
             if (position <= self.heaven_position):
-                env_reward = 100.0
+                env_reward = 1.0
 
             if (position >= self.hell_position):
-                env_reward = -100.0
+                env_reward = -1.0
 
         direction = 0.0
         if position >= self.priest_position - self.priest_delta and position <= self.priest_position + self.priest_delta:

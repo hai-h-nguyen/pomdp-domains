@@ -9,18 +9,17 @@ from gym.envs.classic_control import rendering as visualize
 
 class CarEnv(gym.Env):
     def __init__(self, seed=0, rendering=False):
-        self.max_position = 1.1
+        self.max_position = 2.2
         self.min_position = -self.max_position
-        self.max_speed = 0.07
+        self.max_speed = 0.1
 
         self.setup_view = False
 
         self.min_action = -1.0
         self.max_action = 1.0
 
-        self.heaven_position = 1.0
-        self.hell_position = -1.0
-        self.priest_position = 0.5
+        self.abs_heavenhell_pos = 2.1
+        self.priest_position = 1.0
         self.power = 0.0015
 
         self.low_state = np.array([self.min_position, -self.max_speed])
@@ -29,18 +28,18 @@ class CarEnv(gym.Env):
         self.viewer = None
         self.show = rendering
 
-        self.screen_width = 600
+        self.screen_width = 1200
         self.screen_height = 400
 
         # When the cart is within this vicinity, it observes the direction given
         # by the priest
-        self.priest_delta = 0.2
+        self.priest_delta = 0.4
 
         self.low_state = np.array(
-            [self.min_position, -self.max_speed, -1.0], dtype=np.float32
+            [self.min_position, -self.max_speed, -1.0, -1.0], dtype=np.float32
         )
         self.high_state = np.array(
-            [self.max_position, self.max_speed, 1.0], dtype=np.float32
+            [self.max_position, self.max_speed, 1.0, 1.0], dtype=np.float32
         )
 
         world_width = self.max_position - self.min_position
@@ -99,17 +98,17 @@ class CarEnv(gym.Env):
 
         if (self.heaven_position > self.hell_position):
             if (position >= self.heaven_position):
-                env_reward = 100.0
+                env_reward = 0.0
 
             if (position <= self.hell_position):
-                env_reward = -100.0
+                env_reward = -5.0
 
         if (self.heaven_position < self.hell_position):
             if (position <= self.heaven_position):
-                env_reward = 100.0
+                env_reward = 0.0
 
             if (position >= self.hell_position):
-                env_reward = -100.0
+                env_reward = -5.0
 
         direction = 0.0
         if position >= self.priest_position - self.priest_delta and position <= self.priest_position + self.priest_delta:
@@ -120,12 +119,16 @@ class CarEnv(gym.Env):
                 # Heaven on the left
                 direction = -1.0
 
-        self.state = np.array([position, velocity, direction])
+        self.state = np.array([position, velocity, self.heaven_position])
+        self.obs = np.array([position, velocity, direction])
 
         if self.show:
             self.render()
 
-        return self.state, env_reward, done, {}
+        info = {}
+        info["success"] = (env_reward == 0)
+
+        return self.obs, env_reward, done, info
 
     def render(self, mode='human'):
         self._setup_view()
@@ -141,9 +144,9 @@ class CarEnv(gym.Env):
 
         # Randomize the heaven/hell location
         if (self.np_random.randint(2) == 0):
-            self.heaven_position = 1.0
+            self.heaven_position = self.abs_heavenhell_pos
         else:
-            self.heaven_position = -1.0
+            self.heaven_position = -self.abs_heavenhell_pos
 
         self.hell_position = -self.heaven_position
 
@@ -151,7 +154,7 @@ class CarEnv(gym.Env):
             self._draw_flags()
             self._draw_boundary()
 
-        self.state = np.array([self.np_random.uniform(low=-0.2, high=0.2), 0, 0.0])
+        self.state = np.array([self.np_random.uniform(low=-0.2, high=0.2), 0, 0.0, self.heaven_position])
         return np.array(self.state)
 
     def _height(self, xs):

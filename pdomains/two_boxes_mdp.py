@@ -6,6 +6,7 @@ from gym import spaces
 from gym.utils import seeding
 import mujoco_py
 
+
 class BoxEnv(gym.Env):
 
     def __init__(self, rendering=False, seed=None):
@@ -29,7 +30,6 @@ class BoxEnv(gym.Env):
         self.action_dim = 1
 
         #################### END CONFIGS #######################
-
         # mujoco-py
         xml_path = Path(__file__).resolve().parent / 'assets' / 'two_boxes.xml'
         self.model = mujoco_py.load_model_from_path(str(xml_path))
@@ -91,7 +91,7 @@ class BoxEnv(gym.Env):
         self.x_g = 0
         self.theta = 0
 
-        self.observation_space = spaces.Box(low=-float('inf'), high=float('inf'), shape=(2,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-float('inf'), high=float('inf'), shape=(3,), dtype=np.float32)
         self.state_space = spaces.Box(low=-float('inf'), high=float('inf'), shape=(3,), dtype=np.float32)
 
         # The finger is always soft
@@ -198,7 +198,7 @@ class BoxEnv(gym.Env):
         return self._get_obs(), env_reward, done, {}
 
     def _get_obs(self):
-        return np.array((self.x_g / self.x_right_limit, self.theta))
+        return np.array((self.x_g / self.x_right_limit, self.theta, self.go_to_left))
 
     def render(self, mode='human'):
         if self.rendering:

@@ -5,7 +5,6 @@ import gym
 from gym import spaces
 from pathlib import Path
 from gym.utils import seeding
-import gin
 
 ASSETS_PATH = Path(__file__).resolve().parent / 'assets'
 
@@ -17,7 +16,6 @@ def ur5_bound_angle(angle):
 
     return bounded_angle
 
-@gin.configurable
 class UR5Env(gym.Env):
 
     def __init__(self, prepare_high_obs_method="final-selective", args=None, seed=None, num_frames_skip=15, rendering=False):
