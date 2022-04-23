@@ -13,13 +13,19 @@ register(
 )
 
 register(
-    id='pdomains-two-boxes-v0',
-    entry_point='pdomains.two_boxes_discrete:BoxEnv',
+    id='pdomains-light-house-v0',
+    entry_point='pdomains.lighthouse:LightHouseEnv',
     max_episode_steps=100,
 )
 
 register(
-    id='pdomains-light-house-v0',
-    entry_point='pdomains.lighthouse:LightHouseEnv',
+    id='pdomains-lava-crossing-v0',
+    entry_point='pdomains.lava_crossing_s25n10:LavaCrossingS25N10Env',
+    max_episode_steps=100,
+)
+
+register(
+    id='pdomains-wall-crossing-v0',
+    entry_point='pdomains.wall_crossing_s25n10:WallCrossingS25N10Env',
     max_episode_steps=100,
 )

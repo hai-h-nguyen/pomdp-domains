@@ -9,10 +9,8 @@ print(env.action_space)
 print(env.observation_space)
 
 for i in range(1000):
-    action = env.action_space.sample()
-    env.step(action)
+    action = env.query_expert()
+    _, _, done, _ = env.step(action[0])
     env.render()
-    # print(env.query_expert())
-    if i % 10 == 0:
+    if done:
         env.reset()
-        # print("Reset:", env.reset())

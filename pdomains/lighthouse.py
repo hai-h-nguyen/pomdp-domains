@@ -1,5 +1,12 @@
-from pdomains.lighthouse_core import FindGoalLightHouseTask, LightHouseEnvironment
-from allenact.base_abstractions.sensor import Sensor, SensorSuite
+# from pdomains.lighthouse_core import FindGoalLightHouseTask, LightHouseEnvironment
+
+import sys
+sys.path.append('/home/hainh22/Github/allenact')
+
+from allenact_plugins.lighthouse_plugin.lighthouse_tasks import FindGoalLightHouseTask
+from allenact_plugins.lighthouse_plugin.lighthouse_environment import (
+    LightHouseEnvironment,
+)
 from allenact_plugins.lighthouse_plugin.lighthouse_sensors import (
     FactorialDesignCornerSensor,
 )
@@ -67,7 +74,7 @@ class LightHouseEnv(gym.Env):
         self.env.set_seed(seed)
 
     def query_expert(self):
-        action, flag = self.task.query_expert(self.expert_view_radius)
+        action, _ = self.task.query_expert(self.expert_view_radius)
         return [action]
 
     def query_state(self) -> np.array:
