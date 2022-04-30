@@ -98,9 +98,9 @@ done = False
 
 while True:
     action = env.action_space.sample()
-    _, _, done, _ = env.step(action)
+    obs, _, done, _ = env.step(action)
     env.render('human')
-
+    print(obs.shape)
     if done:
         env.reset()
 env.close()

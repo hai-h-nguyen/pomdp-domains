@@ -10,11 +10,11 @@ ep_cnt = 0
 
 while ep_cnt < 10:
     action = env.query_expert()[0]
-    assert (action < 4), action
+    assert (action < 3), action
     step_cnt += 1
-    _, _, done, _ = env.step(action)
+    _, reward, done, _ = env.step(action)
     if done:
-        print(step_cnt)
+        print(step_cnt, reward)
         ep_cnt += 1
         env.reset()
         step_cnt = 0

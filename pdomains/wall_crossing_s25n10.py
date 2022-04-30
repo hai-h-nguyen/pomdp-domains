@@ -27,8 +27,8 @@ class WallCrossingS25N10Env(gym.Env):
 
     def __init__(self, view_channels: int = 3, agent_view_size: int = 7, max_steps: int = 100, rendering=False, **kwargs):
 
-        grid_size = 25
-        num_crossings = 10
+        grid_size = 11
+        num_crossings = 4
 
         self.show = rendering
 
@@ -50,7 +50,6 @@ class WallCrossingS25N10Env(gym.Env):
         self.task = MiniGridTask(
                     env=self.env, sensors=self.sensors, task_info={}, max_steps=max_steps
                 )
-        self.max_steps = max_steps
         self.action_space = self.task.action_space
         self.observation_space = self.sensors[0]._get_observation_space()
         self.state_space = spaces.Box(
@@ -61,6 +60,7 @@ class WallCrossingS25N10Env(gym.Env):
         )
 
         self.max_steps = max_steps
+        self.steps_cnt = 0
 
         self.num_seed: Optional[int] = None
         self.np_seeded_random_gen: Optional[np.random.RandomState] = None
@@ -85,7 +85,9 @@ class WallCrossingS25N10Env(gym.Env):
             env=self.env, sensors=self.sensors, task_info={}, max_steps=self.max_steps
         )
 
-        return self.task.get_observations()
+        self.steps_cnt = 0
+
+        return self.task.get_observations()['minigrid_ego_image']
 
     def query_expert(self):
         action, _ = self.task.query_expert()
@@ -95,13 +97,14 @@ class WallCrossingS25N10Env(gym.Env):
         return np.array([0])
 
     def step(self, action):
-        assert isinstance(action, int)
-        action = cast(int, action)
-
         _, reward, done, info = self.env.step(action)
+
+        self.steps_cnt += 1
 
         if self.show:
             self.render(mode='human')
+
+        info["success"] = (reward > 0)
 
         return self.task.get_observations()['minigrid_ego_image'], reward, done, info
 

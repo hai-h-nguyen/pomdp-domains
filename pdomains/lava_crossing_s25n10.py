@@ -61,6 +61,7 @@ class LavaCrossingS25N10Env(gym.Env):
         )
 
         self.max_steps = max_steps
+        self.steps_cnt = 0
 
         self.num_seed: Optional[int] = None
         self.np_seeded_random_gen: Optional[np.random.RandomState] = None
@@ -85,7 +86,9 @@ class LavaCrossingS25N10Env(gym.Env):
             env=self.env, sensors=self.sensors, task_info={}, max_steps=self.max_steps
         )
 
-        return self.task.get_observations()
+        self.steps_cnt = 0
+
+        return self.task.get_observations()['minigrid_ego_image']
 
     def query_expert(self):
         action, _ = self.task.query_expert()
@@ -95,13 +98,14 @@ class LavaCrossingS25N10Env(gym.Env):
         return np.array([0])
 
     def step(self, action):
-        assert isinstance(action, int)
-        action = cast(int, action)
-
         _, reward, done, info = self.env.step(action)
+
+        self.steps_cnt += 1
 
         if self.show:
             self.render(mode='human')
+
+        info["success"] = (reward > 0)
 
         return self.task.get_observations()['minigrid_ego_image'], reward, done, info
 

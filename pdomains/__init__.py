@@ -29,3 +29,15 @@ register(
     entry_point='pdomains.wall_crossing_s25n10:WallCrossingS25N10Env',
     max_episode_steps=100,
 )
+
+register(
+    id='pdomains-bumps-1d-v0',
+    entry_point='pdomains.bumps_1d:Bumps1DEnv',
+    max_episode_steps=100,
+)
+
+register(
+    id='pdomains-bumps-2d-v0',
+    entry_point='pdomains.bumps_2d:Bumps2DEnv',
+    max_episode_steps=100,
+)

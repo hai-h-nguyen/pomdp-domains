@@ -8,6 +8,6 @@ env.reset()
 for i in range(1000):
     action = env.action_space.sample()
     # action = env.query_expert()
-    _, _, done, _ = env.step(env.action_space.sample())
+    obs, _, done, _ = env.step(env.action_space.sample())
     if done:
         env.reset()
