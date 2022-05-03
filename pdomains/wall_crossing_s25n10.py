@@ -1,7 +1,11 @@
 
 import sys
+import socket
 
-sys.path.append('/home/hainh22/Github/allenact')
+if socket.gethostname() == 'hainh-sys':
+    sys.path.append('/home/hainh22/Github/allenact')
+else:
+    sys.path.append('/home/hnguyen/allen-act')
 
 from allenact_plugins.minigrid_plugin.minigrid_tasks import MiniGridTask
 
@@ -27,8 +31,8 @@ class WallCrossingS25N10Env(gym.Env):
 
     def __init__(self, view_channels: int = 3, agent_view_size: int = 7, max_steps: int = 100, rendering=False, **kwargs):
 
-        grid_size = 11
-        num_crossings = 4
+        grid_size = 15
+        num_crossings = 7
 
         self.show = rendering
 

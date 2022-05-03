@@ -106,6 +106,7 @@ class Bumps1DEnv(gym.Env):
         # Bumps
         self.ori_x_bump1 = None
         self.ori_x_bump2 = None
+        self.ori_x_g = None
         self.x_bump1 = None
         self.x_bump2 = None
         self.min_bump_distance = 2
@@ -170,10 +171,13 @@ class Bumps1DEnv(gym.Env):
             if self.x_g != self.x_bump1 and self.x_g != self.x_bump2:
                 break
 
-
         # Records the start state.
         self.ori_x_bump1 = self.x_bump1
         self.ori_x_bump2 = self.x_bump2
+        self.ori_x_g = self.x_g
+
+        self.pomdp_expert_trajs = self._generate_pomdp_expert_trajs()
+        self.pomdp_expert_cnt = 0
 
         # Assigns the start state to mujoco-py
         self.sim.data.qpos[self.slide_bump1_id] = self.x_bump1 * self.size_scale
@@ -208,7 +212,7 @@ class Bumps1DEnv(gym.Env):
 
             if action == ACT_LEFT_HARD:
                 action = ACT_LEFT_SOFT
-        
+
         self.steps_cnt += 1
 
         # Executes the determined action.
@@ -242,13 +246,48 @@ class Bumps1DEnv(gym.Env):
 
         return obs, reward, done, info
 
-    def query_expert(self):
+    def query_expert(self, mdp_expert=True):
+
+        if mdp_expert:
+            return self._mdp_expert()
+        else:
+            pomdp_expert_action = self.pomdp_expert_trajs[self.pomdp_expert_cnt]
+            self.pomdp_expert_cnt += 1
+            return [pomdp_expert_action]
+
+    def _mdp_expert(self):
         if (self.x_g >= self.x_bump2):
             return [ACT_LEFT_SOFT]
         elif self.x_g < self.x_bump2 - 1:
             return [ACT_RIGHT_SOFT]
         else:
             return [ACT_RIGHT_HARD]
+
+    def _generate_pomdp_expert_trajs(self):
+        assert self.ori_x_g != self.ori_x_bump1
+        assert self.ori_x_g != self.ori_x_bump2
+
+        if self.ori_x_g < self.ori_x_bump1:
+            phase_1 = [ACT_RIGHT_SOFT]*(self.ori_x_bump1 - self.ori_x_g + 1)
+            phase_2 = [ACT_RIGHT_HARD] * (self.ori_x_bump2 - self.ori_x_bump1 - 1)
+            total = phase_1 + phase_2
+
+        if self.ori_x_bump1 < self.ori_x_g < self.ori_x_bump2:
+            phase_1 = [ACT_RIGHT_SOFT]*(self.ori_x_bump2 - self.ori_x_g + 1)
+            phase_2 = [ACT_RIGHT_HARD]*(self.x_g_right_limit - self.ori_x_bump2 - 1)
+            phase_3 = [ACT_LEFT_SOFT]*(self.x_g_right_limit - self.ori_x_bump2 + 1)
+            phase_4 = [ACT_RIGHT_HARD]
+
+            total = phase_1 + phase_2 + phase_3 + phase_4
+
+        if self.ori_x_g > self.ori_x_bump2:
+            phase_1 = [ACT_RIGHT_SOFT]*(self.x_g_right_limit - self.ori_x_g)
+            phase_2 = [ACT_LEFT_SOFT]*(self.x_g_right_limit - self.ori_x_bump2 + 1)
+            phase_3 = [ACT_RIGHT_HARD]
+
+            total = phase_1 + phase_2 + phase_3
+
+        return total
 
     def query_state(self):
         """

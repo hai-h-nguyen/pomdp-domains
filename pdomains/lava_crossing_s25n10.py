@@ -1,7 +1,11 @@
 
 import sys
+import socket
 
-sys.path.append('/home/hainh22/Github/allenact')
+if socket.gethostname() == 'hainh-sys':
+    sys.path.append('/home/hainh22/Github/allenact')
+else:
+    sys.path.append('/home/hnguyen/allen-act')
 
 from allenact_plugins.minigrid_plugin.minigrid_tasks import MiniGridTask
 

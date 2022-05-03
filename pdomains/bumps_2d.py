@@ -259,12 +259,17 @@ class Bumps2DEnv(gym.Env):
 
         return obs, reward, done, info
 
-    def query_expert(self):
+    def query_expert(self, mdp_expert=True):
         """
         Get action from an expert that sees the complete state
         , ie. reach the big bump directly
         """
-        return self._go_and_stay(self.x_bump1, self.y_bump1)
+        if mdp_expert:
+            return self._go_and_stay(self.x_bump1, self.y_bump1)
+        else:
+            # query actual pomdp expert: visit every cell onces until touching both bumps then 
+            # back to the bigger bump
+            return self._go_and_stay(self.x_bump1, self.y_bump1)
 
     def _go_and_stay(self, desired_x, desired_y):
         """

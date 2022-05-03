@@ -41,3 +41,9 @@ register(
     entry_point='pdomains.bumps_2d:Bumps2DEnv',
     max_episode_steps=100,
 )
+
+register(
+    id='pdomains-mg-memory-s17-v0',
+    entry_point='pdomains.mg_memory_s17:MemoryS17Env',
+    max_episode_steps=100,
+)
