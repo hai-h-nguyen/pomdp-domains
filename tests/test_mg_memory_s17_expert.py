@@ -4,6 +4,8 @@ import time
 
 env = gym.make("pdomains-mg-memory-s17-v0")
 
+print(env.action_space)
+
 obs = env.reset()
 
 eps_cnt = 0

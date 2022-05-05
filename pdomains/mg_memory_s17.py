@@ -33,10 +33,10 @@ class MemoryS17Env(gym.Env):
         The initialization of the simulation environment.
         """
 
-        self.env = gym.make("MiniGrid-MemoryS17Random-v0")
+        self.env = gym.make("MiniGrid-MemoryS13-v0")
 
         # Action
-        self.action_space = self.env.action_space
+        self.action_space = spaces.Discrete(3)
 
         # States and Obs
         self.observation_space = self.env.observation_space['image']

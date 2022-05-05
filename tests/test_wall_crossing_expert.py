@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 env = gym.make('pdomains-wall-crossing-v0', rendering=True)
 env.reset()
 
+print(env.action_space)
+
 step_cnt = 0
 ep_cnt = 0
 
