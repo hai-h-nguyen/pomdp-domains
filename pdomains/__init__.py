@@ -13,6 +13,12 @@ register(
 )
 
 register(
+    id='pdomains-car-flag-continuous-v0',
+    entry_point='pdomains.car_flag_continuous:CarEnv',
+    max_episode_steps=160,
+)
+
+register(
     id='pdomains-light-house-v0',
     entry_point='pdomains.lighthouse:LightHouseEnv',
     max_episode_steps=100,

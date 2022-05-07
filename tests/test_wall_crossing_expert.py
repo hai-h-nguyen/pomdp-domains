@@ -1,6 +1,6 @@
 import gym
 from pdomains import *
-import matplotlib.pyplot as plt
+import time
 
 env = gym.make('pdomains-wall-crossing-v0', rendering=True)
 env.reset()
@@ -15,6 +15,7 @@ while ep_cnt < 5:
     assert (action < 4), action
     step_cnt += 1
     _, reward, done, _ = env.step(action)
+    time.sleep(0.1)
     if done:
         print(step_cnt, reward)
         ep_cnt += 1

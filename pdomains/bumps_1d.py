@@ -94,9 +94,7 @@ class Bumps1DEnv(gym.Env):
         self.size_scale = 8  # 1 unit size in the code means 8 unit in the MuJoCo
 
         # X range marks in MuJoCo
-        world_center_id = self.model.site_name2id("world-center")
         world_right_end_id = self.model.site_name2id("world-right-end")
-        self.model.site_pos[world_center_id][0] = self.x_right_limit * self.size_scale / 2
         self.model.site_pos[world_right_end_id][0] = self.x_right_limit * self.size_scale
 
         # Actuator inner states

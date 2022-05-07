@@ -27,8 +27,8 @@ class CarEnv(gym.Env):
         self.priest_position = 0.5
         self.power = 0.0015
 
-        self.low_state = np.array([self.min_position, -self.max_speed])
-        self.high_state = np.array([self.max_position, self.max_speed])
+        self.low_state = np.array([self.min_position, -self.max_speed], dtype=np.float32)
+        self.high_state = np.array([self.max_position, self.max_speed], dtype=np.float32)
 
         self.viewer = None
         self.show = rendering
@@ -40,18 +40,15 @@ class CarEnv(gym.Env):
         # by the priest
         self.priest_delta = 0.2
 
-        self.low_state = np.array(
-            [self.min_position, -self.max_speed, -1.0], dtype=np.float32
-        )
-        self.high_state = np.array(
-            [self.max_position, self.max_speed, 1.0], dtype=np.float32
-        )
-
         world_width = self.max_position - self.min_position
         self.scale = self.screen_width/world_width
 
-        self.action_space = spaces.Discrete(2)
-
+        self.action_space = spaces.Box(
+            low=self.min_action,
+            high=self.max_action,
+            shape=(1,),
+            dtype=np.float32
+        )
         self.observation_space = spaces.Box(
             low=self.low_state,
             high=self.high_state,
@@ -66,17 +63,9 @@ class CarEnv(gym.Env):
 
     def query_expert(self):
         if (self.heaven_position > self.hell_position):
-            return [1]
+            return [1.0]
         else:
-            return [0]
-
-    def query_state(self):
-        if self.heaven_position < 0:
-            return np.array([0])
-        else:
-            return np.array([1])
-        
-        # return np.array([self.heaven_position])
+            return [-1.0]
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -89,10 +78,7 @@ class CarEnv(gym.Env):
         position = self.state[0]
         velocity = self.state[1]
 
-        if action[0] == 0:
-            force = -1
-        else:
-            force = 1
+        force = min(max(action[0], -1.0), 1.0)
 
         self.steps_taken += 1
 
@@ -111,8 +97,18 @@ class CarEnv(gym.Env):
             position >= max_position or position <= min_position
         )
 
-        env_reward = STEP_PENALTY
+        direction = 0.0
+        if position >= self.priest_position - self.priest_delta and position <= self.priest_position + self.priest_delta:
 
+            if (self.heaven_position > self.hell_position):
+                # Heaven on the right
+                direction = 1.0
+            else:
+                # Heaven on the left
+                direction = -1.0
+
+        env_reward = STEP_PENALTY
+        
         if (self.heaven_position > self.hell_position):
             if (position >= self.heaven_position):
                 env_reward += FOUND_HEAVEN_REWARD
@@ -128,15 +124,6 @@ class CarEnv(gym.Env):
 
             if (position >= self.hell_position):
                 env_reward += FOUND_HELL_REWARD
-
-        direction = 0.0
-        if position >= self.priest_position - self.priest_delta and position <= self.priest_position + self.priest_delta:
-            if (self.heaven_position > self.hell_position):
-                # Heaven on the right
-                direction = 1.0
-            else:
-                # Heaven on the left
-                direction = -1.0
 
         self.state = np.array([position, velocity, direction])
 
@@ -244,6 +231,7 @@ class CarEnv(gym.Env):
         flag = visualize.FilledPolygon(
             [(flagx, flagy2), (flagx, flagy2 - 10), (flagx + 25, flagy2 - 5)]
         )
+
         flag.set_color(0.0, 0.0, 1.0)
         self.viewer.add_geom(flag)
 

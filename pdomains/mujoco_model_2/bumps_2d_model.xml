@@ -10,7 +10,7 @@
         <include file="gripah_asset.xml"/>
         <mesh name="mesh:bump-small" file="objects/bump_60_mujoco.STL"/>
         <mesh name="mesh:bump-large" file="objects/bump_80_mujoco.STL"/>
-        <texture name="tex:floor" type="2d" builtin="checker" rgb1="1 1 1" rgb2="0 0 0" width="100" height="100"
+        <texture name="tex:floor" type="2d" builtin="flat" rgb1="1 1 1" rgb2="0 0 0" width="100" height="100"
                  mark="cross"/>
         <material name="mat:floor" reflectance="0.1" texture="tex:floor" texrepeat="60 60"/>
     </asset>

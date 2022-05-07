@@ -27,9 +27,6 @@ class CarEnv(gym.Env):
         self.priest_position = 0.5
         self.power = 0.0015
 
-        self.low_state = np.array([self.min_position, -self.max_speed])
-        self.high_state = np.array([self.max_position, self.max_speed])
-
         self.viewer = None
         self.show = rendering
 
@@ -56,13 +53,6 @@ class CarEnv(gym.Env):
         self.observation_space = spaces.Box(
             low=self.low_state,
             high=self.high_state,
-            dtype=np.float32
-        )
-
-        self.state_space = spaces.Box(
-            low=-1,
-            high=1,
-            shape=(1, ),
             dtype=np.float32
         )
 
