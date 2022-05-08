@@ -13,8 +13,8 @@ FOUND_HELL_REWARD = -1.0
 
 class CarEnv(gym.Env):
     def __init__(self, seed=0, rendering=False):
-        self.max_position = 2.1
-        self.min_position = -1.1
+        self.max_position = 1.1
+        self.min_position = -self.max_position
         self.max_speed = 0.07
 
         self.setup_view = False
@@ -22,7 +22,7 @@ class CarEnv(gym.Env):
         self.min_action = -1.0
         self.max_action = 1.0
 
-        self.heaven_position = 2.0
+        self.heaven_position = 1.0
         self.hell_position = -1.0
         self.priest_position = 0.5
         self.power = 0.0015
@@ -60,9 +60,6 @@ class CarEnv(gym.Env):
 
         self.steps_taken = 0
         self.reached_heaven = False
-
-        self.flag_pos_1 = 2.0
-        self.flag_pos_2 = -1.0
 
     def query_expert(self):
         if (self.heaven_position > self.hell_position):
@@ -157,11 +154,11 @@ class CarEnv(gym.Env):
 
         # Randomize the heaven/hell location
         if (self.np_random.randint(2) == 0):
-            self.heaven_position = 2.0
-            self.hell_position = -1.0
+            self.heaven_position = 1.0
         else:
             self.heaven_position = -1.0
-            self.hell_position = 2.0
+
+        self.hell_position = -self.heaven_position
 
         if self.viewer is not None:
             self._draw_flags()
@@ -188,10 +185,9 @@ class CarEnv(gym.Env):
 
     def _draw_flags(self):
         scale = self.scale
-        
-        # First flag
-        flagx = (abs(self.flag_pos_1)-self.min_position)*scale
-        flagy1 = self._height(self.flag_pos_1)*scale
+        # Flag Heaven
+        flagx = (abs(self.heaven_position)-self.min_position)*scale
+        flagy1 = self._height(self.heaven_position)*scale
         flagy2 = flagy1 + 50
         flagpole = visualize.Line((flagx, flagy1), (flagx, flagy2))
         self.viewer.add_geom(flagpole)
@@ -207,9 +203,9 @@ class CarEnv(gym.Env):
 
         self.viewer.add_geom(flag)
 
-        # Second flag
-        flagx = (-abs(self.flag_pos_2)-self.min_position)*scale
-        flagy1 = self._height(self.flag_pos_2)*scale
+        # Flag Hell
+        flagx = (-abs(self.heaven_position)-self.min_position)*scale
+        flagy1 = self._height(self.hell_position)*scale
         flagy2 = flagy1 + 50
         flagpole = visualize.Line((flagx, flagy1), (flagx, flagy2))
         self.viewer.add_geom(flagpole)
@@ -225,7 +221,7 @@ class CarEnv(gym.Env):
 
         self.viewer.add_geom(flag)
 
-        # BLUE flag for priest
+        # BLUE for priest
         flagx = (self.priest_position-self.min_position)*scale
         flagy1 = self._height(self.priest_position)*scale
         flagy2 = flagy1 + 50
@@ -235,7 +231,6 @@ class CarEnv(gym.Env):
             [(flagx, flagy2), (flagx, flagy2 - 10), (flagx + 25, flagy2 - 5)]
         )
 
-        # fixed color
         flag.set_color(0.0, 0.0, 1.0)
         self.viewer.add_geom(flag)
 
