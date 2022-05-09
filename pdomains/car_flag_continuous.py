@@ -4,7 +4,10 @@ import numpy as np
 import gym
 from gym import spaces
 from gym.utils import seeding
-from gym.envs.classic_control import rendering as visualize
+import socket
+
+if socket.gethostname() not in ['theseus']:
+    from gym.envs.classic_control import rendering as visualize
 
 DISCOUNT_FACTOR = 0.99
 STEP_PENALTY = -0.01
@@ -60,6 +63,7 @@ class CarEnv(gym.Env):
 
         self.steps_taken = 0
         self.reached_heaven = False
+        self.max_ep_len = 160
 
         self.flag_pos_1 = 2.0
         self.flag_pos_2 = -1.0
@@ -129,8 +133,8 @@ class CarEnv(gym.Env):
 
         self.state = np.array([position, velocity, direction])
 
-        # if self.steps_taken == self.max_ep_length:
-            # env_reward = STEP_PENALTY / (1 - DISCOUNT_FACTOR)
+        if self.steps_taken == self.max_ep_len:
+            env_reward = STEP_PENALTY / (1 - DISCOUNT_FACTOR)
 
         if self.show:
             self.render()

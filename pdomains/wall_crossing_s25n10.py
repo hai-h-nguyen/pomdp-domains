@@ -31,8 +31,8 @@ class WallCrossingS25N10Env(gym.Env):
 
     def __init__(self, view_channels: int = 3, agent_view_size: int = 7, max_steps: int = 100, rendering=False, **kwargs):
 
-        grid_size = 15
-        num_crossings = 7
+        grid_size = 25
+        num_crossings = 10
 
         self.show = rendering
 
