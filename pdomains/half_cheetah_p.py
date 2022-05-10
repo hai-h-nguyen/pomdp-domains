@@ -98,13 +98,6 @@ class HalfCheetahEnv(gym.Env):
 
         self.seed()
 
-        self.steps_taken = 0
-        self.reached_heaven = False
-        self.visit_blue_area = False
-
-        self.flag_pos_1 = 1.0
-        self.flag_pos_2 = -1.0
-
     def query_expert(self):
         state = self.core_env.get_state()
         action, _ = self.expert.predict(state, deterministic=True)

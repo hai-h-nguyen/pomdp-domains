@@ -65,3 +65,9 @@ register(
     entry_point='pdomains.half_cheetah_v:HalfCheetahEnv',
     max_episode_steps=1000,
 )
+
+register(
+    id='pdomains-lunar-lander-p-v0',
+    entry_point='pdomains.lunarlander_p:LunarLanderEnv',
+    max_episode_steps=1000,
+)

@@ -3,9 +3,8 @@
 import numpy as np
 import gym
 from gym import spaces
-import pybullet_envs
-from stable_baselines3 import SAC
 from pathlib import Path
+from stable_baselines3 import SAC
 
 class POMDPWrapper(gym.Wrapper):
     def __init__(self, env, partially_obs_dims: list):
@@ -61,11 +60,11 @@ class POMDPWrapper(gym.Wrapper):
 
         return self.get_obs(state), reward, done, info
 
-class HalfCheetahEnv(gym.Env):
+class LunarLanderEnv(gym.Env):
     def __init__(self, seed=0, rendering=False):
-        env = gym.make('HalfCheetahBulletEnv-v0')
+        env = gym.make('LunarLanderContinuous-v2')
 
-        partially_obs_dims = [3, 4, 5, 9, 11, 13, 15, 17, 19]
+        partially_obs_dims=[0, 1, 4, 6, 7]
 
         self.core_env = POMDPWrapper(env, partially_obs_dims)
 
@@ -75,7 +74,7 @@ class HalfCheetahEnv(gym.Env):
         self.action_space = self.core_env.action_space
         self.observation_space = self.core_env.observation_space
 
-        expert_path = Path(__file__).resolve().parent / 'sac_cheetah'
+        expert_path = Path(__file__).resolve().parent / 'sac_lunarlander'
         self.expert = SAC.load(expert_path)
 
         self.seed()
