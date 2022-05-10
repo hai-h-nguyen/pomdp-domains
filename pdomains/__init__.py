@@ -53,3 +53,15 @@ register(
     entry_point='pdomains.mg_memory_s17:MemoryS17Env',
     max_episode_steps=100,
 )
+
+register(
+    id='pdomains-half-cheetah-p-v0',
+    entry_point='pdomains.half_cheetah_p:HalfCheetahEnv',
+    max_episode_steps=1000,
+)
+
+register(
+    id='pdomains-half-cheetah-v-v0',
+    entry_point='pdomains.half_cheetah_v:HalfCheetahEnv',
+    max_episode_steps=1000,
+)
