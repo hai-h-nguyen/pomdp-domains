@@ -106,6 +106,8 @@ class CarEnv(gym.Env):
         )
 
         direction = 0.0
+        self.reached_heaven = False
+
         if position >= self.priest_position - self.priest_delta and position <= self.priest_position + self.priest_delta:
             if not self.visit_blue_area:
                 self.visit_blue_area = True
