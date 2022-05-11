@@ -57,7 +57,7 @@ register(
 register(
     id='pdomains-half-cheetah-p-v0',
     entry_point='pdomains.half_cheetah_p:HalfCheetahEnv',
-    max_episode_steps=1000,
+    max_episode_steps=200,
 )
 
 register(
@@ -69,5 +69,18 @@ register(
 register(
     id='pdomains-lunar-lander-p-v0',
     entry_point='pdomains.lunarlander_p:LunarLanderEnv',
-    max_episode_steps=1000,
+    max_episode_steps=160,
+)
+
+register(
+    id='pdomains-cart-pole-p-v0',
+    entry_point='pdomains.cartpole_p:CartPolePEnv',
+    max_episode_steps=160,
+)
+
+# fully observable version of cart pole
+register(
+    id='pdomains-cart-pole-f-v0',
+    entry_point='pdomains.cartpole:CartPoleEnv',
+    max_episode_steps=160,
 )
