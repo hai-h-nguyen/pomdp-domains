@@ -63,7 +63,7 @@ register(
 register(
     id='pdomains-half-cheetah-v-v0',
     entry_point='pdomains.half_cheetah_v:HalfCheetahEnv',
-    max_episode_steps=1000,
+    max_episode_steps=200,
 )
 
 register(
