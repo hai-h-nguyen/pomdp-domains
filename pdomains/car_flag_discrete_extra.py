@@ -4,7 +4,10 @@ import numpy as np
 import gym
 from gym import spaces
 from gym.utils import seeding
-from gym.envs.classic_control import rendering as visualize
+import socket
+
+if socket.gethostname() not in ['theseus']:
+    from gym.envs.classic_control import rendering as visualize
 
 DISCOUNT_FACTOR = 0.99
 STEP_PENALTY = -0.01
