@@ -73,6 +73,9 @@ class Bumps1DEnv(gym.Env):
         self.viewer = None  # Initializes only when self.render() is called.
         self.rendering = rendering
 
+        # geoms
+        self.wide_finger_geom_id = self.model.geom_name2id('geom:wide-finger')
+
         # MuJoCo joints ids
         self.slide_x_id = self.model.joint_name2id('slide:gripah-base-x')
         self.hinge_wide_finger_id = self.model.joint_name2id('hinge:wide-finger')
@@ -140,6 +143,7 @@ class Bumps1DEnv(gym.Env):
         self.start_state = None
 
         self.steps_cnt = 0
+        self.case_stats = [0, 0, 0]
 
         # numpy random
         self.seed(seed)
@@ -156,6 +160,8 @@ class Bumps1DEnv(gym.Env):
         # Resets the mujoco env
         self.sim.reset()
 
+        self._highlight_gripah(is_highlighted=False)
+
         # Determines the start state of x_g, theta, x_bump1, and x_bump2.
         self.x_bump1 = self.np_random.randint(self.x_bump1_limit_min, self.x_bump1_limit_max + 1)
 
@@ -164,10 +170,18 @@ class Bumps1DEnv(gym.Env):
             if self.min_bump_distance <= self.x_bump2 - self.x_bump1 <= self.max_bump_distance:
                 break
 
-        while True:
-            self.x_g = self.np_random.randint(self.x_g_left_limit, self.x_g_right_limit + 1)
-            if self.x_g != self.x_bump1 and self.x_g != self.x_bump2:
-                break
+        range_0 = [self.x_g_left_limit, self.x_bump1 - 1]
+        range_1 = [self.x_bump1 + 1, self.x_bump2 - 1]
+        range_2 = [self.x_bump2 + 1, self.x_g_right_limit]
+
+        ranges = [range_0, range_1, range_2]
+
+        option = self.np_random.randint(0, 3)
+
+        chosen_range = ranges[option]
+        self.x_g  = self.np_random.randint(chosen_range[0], chosen_range[1] + 1)
+
+        self.case_stats[option] += 1
 
         # Records the start state.
         self.ori_x_bump1 = self.x_bump1
@@ -176,6 +190,8 @@ class Bumps1DEnv(gym.Env):
 
         self.pomdp_expert_trajs = self._generate_pomdp_expert_trajs()
         self.pomdp_expert_cnt = 0
+
+        self._highlight_gripah(is_highlighted=False)
 
         # Assigns the start state to mujoco-py
         self.sim.data.qpos[self.slide_bump1_id] = self.x_bump1 * self.size_scale
@@ -216,15 +232,19 @@ class Bumps1DEnv(gym.Env):
         # Executes the determined action.
         if action == 0:
             self._move_gripah_left_soft()
+            self._highlight_gripah(is_highlighted=False)
 
         elif action == 1:
             self._move_gripah_left_hard()
+            self._highlight_gripah(is_highlighted=True)
 
         elif action == 2:
             self._move_gripah_right_soft()
+            self._highlight_gripah(is_highlighted=False)
 
         elif action == 3:
             self._move_gripah_right_hard()
+            self._highlight_gripah(is_highlighted=True)
 
         else:
             raise ValueError("Unknown action index received.")
@@ -237,6 +257,8 @@ class Bumps1DEnv(gym.Env):
 
         if self.x_bump2 > self.ori_x_bump2:
             reward = 1
+            if self.steps_cnt == self.ori_x_bump2 - self.ori_x_g and self.ori_x_bump1 < self.ori_x_g < self.ori_x_bump2:
+                reward = 0
 
         obs = np.array((self.x_g / self.x_g_right_limit, self.theta / self.max_theta, float(action / self.norm_action)))
         info = {}
@@ -300,6 +322,19 @@ class Bumps1DEnv(gym.Env):
                                  x_bump2=self.x_bump2 / self.x_right_limit)
 
         return np.array(state_normalized)
+
+    def _highlight_gripah(self, is_highlighted, mode=0):
+        """
+        Highlights the gripah.
+        :param mode: three modes of colors to select
+        """
+
+        if is_highlighted:
+            self.model.geom_rgba[self.wide_finger_geom_id][mode] = 0
+        else:
+            self.model.geom_rgba[self.wide_finger_geom_id][0] = 0.89804
+            self.model.geom_rgba[self.wide_finger_geom_id][1] = 0.89804
+            self.model.geom_rgba[self.wide_finger_geom_id][2] = 0.89804
 
     def render(self, mode='human'):
         """
