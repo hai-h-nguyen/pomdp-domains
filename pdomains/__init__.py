@@ -73,6 +73,12 @@ register(
 )
 
 register(
+    id='pdomains-lunar-lander-v-v0',
+    entry_point='pdomains.lunarlander_v:LunarLanderEnv',
+    max_episode_steps=160,
+)
+
+register(
     id='pdomains-cart-pole-p-v0',
     entry_point='pdomains.cartpole_p:CartPolePEnv',
     max_episode_steps=160,
