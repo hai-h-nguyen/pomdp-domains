@@ -6,7 +6,7 @@ from gym import spaces
 from gym.utils import seeding
 import socket
 
-if socket.gethostname() not in ['theseus']:
+if socket.gethostname() not in ['theseus', 'titan']:
     from gym.envs.classic_control import rendering as visualize
 
 DISCOUNT_FACTOR = 0.99
