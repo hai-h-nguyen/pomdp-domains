@@ -5,6 +5,7 @@ import gym
 from gym import spaces
 from pathlib import Path
 from stable_baselines3 import SAC
+import torch
 
 class POMDPWrapper(gym.Wrapper):
     def __init__(self, env, partially_obs_dims: list):
@@ -74,12 +75,18 @@ class LunarLanderEnv(gym.Env):
         self.action_space = self.core_env.action_space
         self.observation_space = self.core_env.observation_space
 
-        expert_path = Path(__file__).resolve().parent / 'sac_lunarlander'
-        self.expert = SAC.load(expert_path)
+        self.expert = None
 
         self.seed()
 
     def query_expert(self):
+        if self.expert is None:
+            if torch.__version__ == '1.4.0':
+                expert_path = Path(__file__).resolve().parent / 'sac_lunarlander_old'
+            else:
+                expert_path = Path(__file__).resolve().parent / 'sac_lunarlander'
+            self.expert = SAC.load(expert_path)
+
         state = self.core_env.get_state()
         action, _ = self.expert.predict(state, deterministic=True)
         return [action]
