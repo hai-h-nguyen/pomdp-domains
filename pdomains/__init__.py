@@ -54,6 +54,14 @@ register(
     max_episode_steps=100,
 )
 
+# observation shape is permuted 7, 7, 3 --> 3, 7, 7
+register(
+    id='pdomains-mg-memory-s17-v1',
+    entry_point='pdomains.mg_memory_s17_reshaped:MemoryS17Env',
+    max_episode_steps=100,
+)
+
+
 register(
     id='pdomains-half-cheetah-p-v0',
     entry_point='pdomains.half_cheetah_p:HalfCheetahEnv',
