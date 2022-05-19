@@ -98,3 +98,9 @@ register(
     entry_point='pdomains.cartpole:CartPoleEnv',
     max_episode_steps=160,
 )
+
+register(
+    id='pdomains-block-picking-v0',
+    entry_point='pdomains.block_picking:BlockEnv',
+    max_episode_steps=50,
+)
