@@ -104,3 +104,9 @@ register(
     entry_point='pdomains.block_picking:BlockEnv',
     max_episode_steps=50,
 )
+
+register(
+    id='pdomains-block-picking-v1',
+    entry_point='pdomains.block_picking_dev:BlockEnv',
+    max_episode_steps=50,
+)

@@ -85,8 +85,7 @@ class LunarLanderEnv(gym.Env):
                 expert_path = Path(__file__).resolve().parent / 'sac_lunarlander_old'
             else:
                 expert_path = Path(__file__).resolve().parent / 'sac_lunarlander'
-            
-        self.expert = SAC.load(expert_path)
+            self.expert = SAC.load(expert_path)
 
         state = self.core_env.get_state()
         action, _ = self.expert.predict(state, deterministic=True)

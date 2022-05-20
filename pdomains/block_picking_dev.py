@@ -39,7 +39,7 @@ class BlockEnv(gym.Env):
         self.action_space = spaces.Box(-high_action, high_action)
 
         low = np.zeros((84, 84, 3))
-        high = 255*np.ones((84, 84, 3))
+        high = np.ones((84, 84, 3))
         self.observation_space = spaces.Box(low=low, high=high, shape=(84, 84, 3), dtype=np.float32)
 
         self.target_obj_idx = 0
@@ -75,6 +75,10 @@ class BlockEnv(gym.Env):
         # plt.imshow(obs[0], vmin=0, vmax=0.2)
         # plt.show()
 
+        if self.first_obs is not None:
+            print(np.max(self.first_obs - obs))
+            print(np.min(self.first_obs - obs))
+
         self.obs = self._process_obs(state, obs, reward)
 
         info = {}
@@ -97,10 +101,8 @@ class BlockEnv(gym.Env):
         # plt.imshow(obs[0], vmin=0, vmax=0.2)
         # plt.show()
 
-        # if self.cnt_reset == 2:
-        #     self.first_obs = obs
-        # elif self.cnt_reset > 2:
-        #     print(np.min(self.first_obs - obs), np.max(self.first_obs - obs))
+        if self.cnt_reset == 2:
+            self.first_obs = obs
         self.obs = self._process_obs(state, obs, 0.0)
         return self.obs
 
