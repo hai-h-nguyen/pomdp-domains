@@ -21,9 +21,9 @@ class BlockEnv(gym.Env):
                         'reward_type': 'sparse', 'simulate_grasp': True, 'perfect_grasp': False, 'robot': 'ur5_robotiq',
                         'workspace_check': 'point', 'physics_mode': 'fast', 'hard_reset_freq': 1000,
                         'object_scale_range': (1, 1), 'obs_type': 'pixel',
-                        'view_type': 'camera_fix'}
+                        'view_type': 'camera_fix_height'}
 
-        self.planner_config = {'random_orientation': True, 'dpos': 0.05, 'drot': np.pi/8}
+        self.planner_config = {'random_orientation': False, 'dpos': 0.05, 'drot': np.pi/8}
 
         self.env_config['render'] = rendering
         self.seed(seed)
@@ -72,8 +72,8 @@ class BlockEnv(gym.Env):
         # action = np.zeros_like(action)
         (state, _, obs), reward, done = self.core_env.step(action)
 
-        # plt.imshow(obs[0], vmin=0, vmax=0.2)
-        # plt.show()
+        plt.imshow(obs[0], vmin=0, vmax=0.2)
+        plt.show()
 
         self.obs = self._process_obs(state, obs, reward)
 
