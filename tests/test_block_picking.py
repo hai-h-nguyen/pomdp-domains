@@ -12,6 +12,7 @@ for i in range(1000):
     # print(action)
     action = env.query_expert()
     obs, reward, done, info = env.step(action)
+    print(reward)
     cnt += 1
     if done:
         print(cnt)

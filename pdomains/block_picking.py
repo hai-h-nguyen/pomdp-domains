@@ -17,7 +17,7 @@ class BlockEnv(gym.Env):
                                 [0.01, 0.25]])
 
         self.env_config = {'workspace': workspace, 'max_steps': 100, 'obs_size': 84, 'render': False, 'fast_mode': True,
-                        'seed': 0, 'action_sequence': action_sequence, 'num_objects': 1, 'random_orientation': False,
+                        'seed': seed, 'action_sequence': action_sequence, 'num_objects': 1, 'random_orientation': False,
                         'reward_type': 'sparse', 'simulate_grasp': True, 'perfect_grasp': False, 'robot': robot,
                         'workspace_check': 'point', 'physics_mode': 'fast', 'hard_reset_freq': 1000, 'view_scale': 1.0,
                         'object_scale_range': (1, 1), 'obs_type': 'pixel',

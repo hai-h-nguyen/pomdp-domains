@@ -2,11 +2,12 @@ from pdomains import *
 import gym
 import numpy as np
 
+env=gym.make('pdomains-wall-crossing-v0', rendering=False)
 # env=gym.make('pdomains-mg-memory-s17-v0', rendering=False)
 # env=gym.make('pdomains-car-flag-continuous-v0', rendering=False)
 # env=gym.make('pdomains-half-cheetah-v-v0', rendering=False)
 # env=gym.make('pdomains-lunar-lander-v-v0', rendering=False)
-env=gym.make('pdomains-block-picking-v0', rendering=False)
+# env=gym.make('pdomains-block-picking-v0', rendering=False)
 env.reset()
 
 num_eps = 100
