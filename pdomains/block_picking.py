@@ -8,9 +8,11 @@ from gym.utils import seeding
 from helping_hands_rl_envs import env_factory
 import matplotlib.pyplot as plt
 import time
+import math
+import torch
 
 class BlockEnv(gym.Env):
-    def __init__(self, seed=0, rendering=False, robot='kuka', action_sequence='pxyz'):
+    def __init__(self, seed=0, rendering=False, robot='kuka', action_sequence='pxyz', noise=True):
 
         workspace = np.asarray([[0.3, 0.7],
                                 [-0.2, 0.2],
@@ -37,6 +39,7 @@ class BlockEnv(gym.Env):
         self.viewer = None
         self.show = rendering
         self.obs = None
+        self.include_noise = noise
 
         self.action_dim = len(self.env_config['action_sequence'])
         high_action = np.ones(self.action_dim)
@@ -69,7 +72,35 @@ class BlockEnv(gym.Env):
         return seed_
 
     @staticmethod
-    def _process_obs(state, obs, reward):
+    def rand_perlin_2d(shape, res, fade=lambda t: 6 * t ** 5 - 15 * t ** 4 + 10 * t ** 3):
+        delta = (res[0] / shape[0], res[1] / shape[1])
+        d = (shape[0] // res[0], shape[1] // res[1])
+
+        grid = torch.stack(torch.meshgrid(torch.arange(0, res[0], delta[0]), torch.arange(0, res[1], delta[1])), dim=-1) % 1
+        angles = 2 * math.pi * torch.rand(res[0] + 1, res[1] + 1)
+        gradients = torch.stack((torch.cos(angles), torch.sin(angles)), dim=-1)
+
+        tile_grads = lambda slice1, slice2: gradients[slice1[0]:slice1[1], slice2[0]:slice2[1]] \
+            .repeat_interleave(d[0], 0).repeat_interleave(d[1], 1)
+
+        dot = lambda grad, shift: (
+                torch.stack((grid[:shape[0], :shape[1], 0] + shift[0], grid[:shape[0], :shape[1], 1] + shift[1]),
+                            dim=-1) * grad[:shape[0], :shape[1]]).sum(dim=-1)
+
+        n00 = dot(tile_grads([0, -1], [0, -1]), [0, 0])
+        n10 = dot(tile_grads([1, None], [0, -1]), [-1, 0])
+        n01 = dot(tile_grads([0, -1], [1, None]), [0, -1])
+        n11 = dot(tile_grads([1, None], [1, None]), [-1, -1])
+        t = fade(grid[:shape[0], :shape[1]])
+
+        return (math.sqrt(2) * torch.lerp(torch.lerp(n00, n10, t[..., 0]), torch.lerp(n01, n11, t[..., 0]), t[..., 1]))
+
+    def _process_obs(self, state, obs, reward):
+        if self.include_noise:
+            obs += 0.007*self.rand_perlin_2d((84, 84), (
+                (np.random.choice([1, 2, 4, 6], 1)[0]),
+                int(np.random.choice([1, 2, 4, 6], 1)[0]))).numpy()
+
         state_tile = state*np.ones((1, obs.shape[1], obs.shape[2]))
         reward_tile = reward*np.ones((1, obs.shape[1], obs.shape[2]))
         stacked = np.concatenate([obs, state_tile, reward_tile], axis=0)
@@ -105,7 +136,7 @@ class BlockEnv(gym.Env):
     def reset(self):
         self.target_obj_idx = 1 - self.target_obj_idx
         self.cnt_reset += 1
-        (state, _, obs) = self.core_env.reset(self.target_obj_idx)
+        (state, _, obs) = self.core_env.reset(self.target_obj_idx, noise=self.include_noise)
 
         # plt.imshow(obs[0], vmin=0, vmax=0.2)
         # plt.show()
