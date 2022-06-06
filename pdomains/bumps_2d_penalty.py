@@ -244,6 +244,8 @@ class Bumps2DEnv(gym.Env):
             if self._check_success():
                 reward = 1
 
+            # reward += self._get_penalty()
+
         else:
             raise ValueError("Unknown action index received.")
 
@@ -425,10 +427,18 @@ class Bumps2DEnv(gym.Env):
 
         self.theta = self._get_theta()
 
-        if (self.x_g == self.x_bump1 and self.y_g == self.y_bump1 and self.is_bump1_touched and self.is_bump2_touched):
+        if (self.x_g == self.x_bump1 and self.y_g == self.y_bump1):
             return True
 
         return False
+
+    def _get_penalty(self):
+        if (self.x_g == self.x_bump1 and self.y_g == self.y_bump1):
+            if not (self.is_bump1_touched and self.is_bump2_touched):
+                return -1.0
+            else:
+                return 0.0
+        return 0.0
 
     def _move_gripah_along_x(self, x_g, stiffness):
         """

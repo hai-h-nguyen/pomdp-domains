@@ -49,6 +49,12 @@ register(
 )
 
 register(
+    id='pdomains-bumps-2d-penalty-v0',
+    entry_point='pdomains.bumps_2d_penalty:Bumps2DEnv',
+    max_episode_steps=100,
+)
+
+register(
     id='pdomains-mg-memory-s17-v0',
     entry_point='pdomains.mg_memory_s17:MemoryS17Env',
     max_episode_steps=100,
@@ -108,5 +114,11 @@ register(
 register(
     id='pdomains-block-picking-v1',
     entry_point='pdomains.block_picking_dev:BlockEnv',
+    max_episode_steps=50,
+)
+
+register(
+    id='pdomains-heaven-hell-v0',
+    entry_point='pdomains.heaven_hell:HeavenHellEnv',
     max_episode_steps=50,
 )

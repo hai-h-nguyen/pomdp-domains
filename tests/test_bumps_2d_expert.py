@@ -6,6 +6,8 @@ env.reset()
 
 for i in range(1000):
     action = env.query_expert()[0]
-    _, _, done, _ = env.step(action)
+    print(action)
+    _, reward, done, _ = env.step(action)
     if done:
+        print("Done:", reward)
         env.reset()
