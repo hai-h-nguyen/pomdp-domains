@@ -150,8 +150,7 @@ class Bumps2DEnv(gym.Env):
         # States: (x_g, y_g, theta, x_bump1, y_bump1, x_bump2, y_bump2)
 
         # Obs: (x_g, y_g, theta, action, x_bump1, y_bump1, x_bump2, y_bump2)
-        self.observation_space = spaces.Box(low=-float('inf'), high=float('inf'), shape=(4,), dtype=np.float32)
-        self.state_space = spaces.Box(low=-float('inf'), high=float('inf'), shape=(7,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-float('inf'), high=float('inf'), shape=(5,), dtype=np.float32)
 
         # numpy random
         self.np_random = None
@@ -208,7 +207,7 @@ class Bumps2DEnv(gym.Env):
         self.theta = self._get_theta()
 
         return np.array((self.x_g / self.xy_g_high_limit, self.y_g / self.xy_g_high_limit,
-                         self.theta / self.max_theta, -1.0 / self.norm_action))
+                         self.theta / self.max_theta, 0.0, 0.0))
 
     def step(self, action):
         """
@@ -244,7 +243,7 @@ class Bumps2DEnv(gym.Env):
             if self._check_success():
                 reward = 1
 
-            # reward += self._get_penalty()
+            reward += self._get_penalty()
 
         else:
             raise ValueError("Unknown action index received.")
@@ -252,12 +251,12 @@ class Bumps2DEnv(gym.Env):
         self.steps_cnt += 1
 
         obs = np.array([self.x_g / self.xy_g_high_limit, self.y_g / self.xy_g_high_limit,
-                        self.theta / self.max_theta, float(action / self.norm_action)])
+                        self.theta / self.max_theta, self.is_bump1_touched, self.is_bump2_touched])
 
         info = {}
 
         info['success'] = (reward == 1)
-        done = (reward == 1)
+        done = (reward == 1) or (action == ACT_STAY)
 
         return obs, reward, done, info
 
@@ -435,7 +434,7 @@ class Bumps2DEnv(gym.Env):
     def _get_penalty(self):
         if (self.x_g == self.x_bump1 and self.y_g == self.y_bump1):
             if not (self.is_bump1_touched and self.is_bump2_touched):
-                return -1.0
+                return -100.0
             else:
                 return 0.0
         return 0.0
