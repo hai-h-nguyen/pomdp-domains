@@ -152,6 +152,8 @@ class Bumps2DEnv(gym.Env):
         # Obs: (x_g, y_g, theta, action, x_bump1, y_bump1, x_bump2, y_bump2)
         self.observation_space = spaces.Box(low=-float('inf'), high=float('inf'), shape=(5,), dtype=np.float32)
 
+        self.stay_cnt = 0
+
         # numpy random
         self.np_random = None
         self.seed(seed)
@@ -167,6 +169,7 @@ class Bumps2DEnv(gym.Env):
         self.sim.reset()
 
         self.steps_cnt = 0
+        self.stay_cnt = 0
 
         # Determines the start state of x_bump1 and y_bump1.
         self.x_bump1 = self.np_random.randint(self.xy_bump_low_limit, self.xy_bump_high_limit + 1)
@@ -240,6 +243,7 @@ class Bumps2DEnv(gym.Env):
             self._move_gripah_forward()
 
         elif action == ACT_STAY:
+            self.stay_cnt += 1
             if self._check_success():
                 reward = 1
 
@@ -256,7 +260,7 @@ class Bumps2DEnv(gym.Env):
         info = {}
 
         info['success'] = (reward == 1)
-        done = (reward == 1) or (action == ACT_STAY)
+        done = (reward == 1) or (self.stay_cnt == 2)
 
         return obs, reward, done, info
 
@@ -396,7 +400,7 @@ class Bumps2DEnv(gym.Env):
         if not self.is_bump1_touched:
             self.is_bump1_touched = self.is_bump1_touched_now()
 
-        if not self.is_bump2_touched:    
+        if not self.is_bump2_touched: 
             self.is_bump2_touched = self.is_bump2_touched_now()
 
     def _move_gripah_forward(self):
@@ -426,7 +430,8 @@ class Bumps2DEnv(gym.Env):
 
         self.theta = self._get_theta()
 
-        if (self.x_g == self.x_bump1 and self.y_g == self.y_bump1):
+        if (self.x_g == self.x_bump1 and self.y_g == self.y_bump1 \
+            and self.is_bump1_touched and self.is_bump2_touched):
             return True
 
         return False
