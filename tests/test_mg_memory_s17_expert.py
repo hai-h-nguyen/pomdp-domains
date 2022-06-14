@@ -10,7 +10,7 @@ obs = env.reset()
 
 eps_cnt = 0
 
-while eps_cnt < 10:
+while eps_cnt < 100:
     action = env.query_expert()[0]
     _, reward, done, _ = env.step(action)
     env.render()

@@ -145,6 +145,11 @@ class Bumps1DEnv(gym.Env):
         self.steps_cnt = 0
         self.case_stats = [0, 0, 0]
 
+        # x_g, x_bump1, x_bump2
+        self.test_positions = [[1, 6, 10], [7, 5, 12], [12, 3, 9]]
+        self.use_test_pos = False
+        self.eps_cnt = -1
+
         # numpy random
         self.seed(seed)
 
@@ -180,6 +185,12 @@ class Bumps1DEnv(gym.Env):
 
         chosen_range = ranges[option]
         self.x_g  = self.np_random.randint(chosen_range[0], chosen_range[1] + 1)
+
+        if self.use_test_pos:
+            [self.x_g, self.x_bump1, self.x_bump2] = self.test_positions[0]
+            self.eps_cnt += 1
+            if self.eps_cnt == 3:
+                self.eps_cnt = 0
 
         self.case_stats[option] += 1
 
@@ -236,7 +247,7 @@ class Bumps1DEnv(gym.Env):
 
         elif action == 1:
             self._move_gripah_left_hard()
-            self._highlight_gripah(is_highlighted=True)
+            self._highlight_gripah(is_highlighted=False)
 
         elif action == 2:
             self._move_gripah_right_soft()
@@ -244,7 +255,7 @@ class Bumps1DEnv(gym.Env):
 
         elif action == 3:
             self._move_gripah_right_hard()
-            self._highlight_gripah(is_highlighted=True)
+            self._highlight_gripah(is_highlighted=False)
 
         else:
             raise ValueError("Unknown action index received.")

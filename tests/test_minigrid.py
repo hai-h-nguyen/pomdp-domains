@@ -4,13 +4,11 @@ import time
 env = gym.make('MiniGrid-MemoryS17Random-v0')
 obs = env.reset() # This noMiniGrid-DoorKey-16x16-v0w produces an RGB tensor only
 
-print(env.action_space.n)
+test_episodes = 100
+eps_cnt = 0
 
-print(obs['image'].shape)
-
-for i in range(1000):
+for i in range(test_episodes):
     obs, _, _, _ = env.step(env.action_space.sample())
-    print(obs['image'].shape)
     env.render()
 
     if i % 50 == 0:

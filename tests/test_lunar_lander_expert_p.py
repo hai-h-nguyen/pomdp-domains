@@ -1,7 +1,7 @@
 from pdomains import *
 import gym
 
-env=gym.make('pdomains-lunar-lander-p-v0', rendering=False)
+env=gym.make('pdomains-lunar-lander-p-v0', rendering=True)
 obs = env.reset()
 returns = 0
 

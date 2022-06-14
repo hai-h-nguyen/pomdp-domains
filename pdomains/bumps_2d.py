@@ -1,6 +1,3 @@
-#
-# Created by Xinchao Song on June 1, 2020.
-#
 import math
 import operator
 from pathlib import Path
@@ -147,7 +144,9 @@ class Bumps2DEnv(gym.Env):
 
         self.steps_cnt = 0
 
-        # States: (x_g, y_g, theta, x_bump1, y_bump1, x_bump2, y_bump2)
+        # (x_g, y_g, x_bump1, y_bump1, x_bump2, y_bump2
+        self.test_positions = [[0, 0, 1, 1, 3, 2], [0, 0, 3, 2, 1, 1]]
+        self.test_pos = True
 
         # Obs: (x_g, y_g, theta, action, x_bump1, y_bump1, x_bump2, y_bump2)
         self.observation_space = spaces.Box(low=-float('inf'), high=float('inf'), shape=(4,), dtype=np.float32)
@@ -196,6 +195,9 @@ class Bumps2DEnv(gym.Env):
 
             if cond1 and cond2:
                 break
+
+        if self.test_pos:
+            [self.x_g, self.y_g, self.x_bump1, self.y_bump1, self.x_bump2, self.y_bump2] = self.test_positions[1]
 
         # Assigns the start state to mujoco-py
         self.model.body_pos[self.bump1_body_id][0] = self.x_bump1 * self.size_scale

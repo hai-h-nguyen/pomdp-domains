@@ -12,7 +12,7 @@ import math
 import torch
 
 class BlockEnv(gym.Env):
-    def __init__(self, seed=0, rendering=False, robot='kuka', action_sequence='pxyz', noise=True):
+    def __init__(self, seed=0, rendering=False, robot='kuka', action_sequence='pxyz', noise=False):
 
         workspace = np.asarray([[0.3, 0.7],
                                 [-0.2, 0.2],
