@@ -122,3 +122,9 @@ register(
     entry_point='pdomains.heaven_hell:HeavenHellEnv',
     max_episode_steps=50,
 )
+
+register(
+    id='pdomains-ordered-tool-delivery-v0',
+    entry_point='pdomains.ordered_tool_delivery:OrderedToolDeliveryEnv',
+    max_episode_steps=20,
+)
