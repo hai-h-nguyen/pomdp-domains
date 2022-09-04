@@ -36,6 +36,8 @@ class OrderedToolDeliveryEnv(gym.Env):
         self.max_ep_length = 20
         self.steps_taken = 0
 
+        self.discount = 0.95
+
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
