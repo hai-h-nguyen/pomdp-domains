@@ -26,7 +26,7 @@ class SpeedyToolDeliveryEnv(gym.Env):
         # which object are on the table: [2]*n_objs (only observable in the tool-room)
         # human 0 working step: [n_objs + 1] (only observable in the work-room)
         # human 1 working step: [n_objs + 1] (only observable in the work-room)
-        self.observation_space = spaces.MultiBinary(3 + 2*self.n_objs + self.n_objs +
+        self.observation_space = spaces.MultiBinary(3 + 3*self.n_objs + self.n_objs +
                                                     self.n_human_steps + self.n_human_steps)
 
         self.seed()
@@ -77,10 +77,10 @@ class SpeedyToolDeliveryEnv(gym.Env):
         objs_in_table = raw_obs[4:7]
 
         human0_stage = raw_obs[7]
-        onehot_human0_stage = self._to_onehot(human0_stage, 2)
+        onehot_human0_stage = self._to_onehot(human0_stage, 4)
 
         human1_stage = raw_obs[8]
-        onehot_human1_stage = self._to_onehot(human1_stage, 2)
+        onehot_human1_stage = self._to_onehot(human1_stage, 4)
 
         return np.array(onehot_room + obj0_onehot + obj1_onehot + obj2_onehot
                         + list(objs_in_table) + onehot_human0_stage + onehot_human1_stage)
@@ -196,7 +196,7 @@ class SpeedyToolDeliveryEnv(gym.Env):
 
 if __name__ == "__main__":
     env = SpeedyToolDeliveryEnv()
-    print(env.reset())
+    print(len(env.reset()))
 
     print(env.step(0))
     print(env.step(3))
