@@ -128,3 +128,9 @@ register(
     entry_point='pdomains.ordered_tool_delivery:OrderedToolDeliveryEnv',
     max_episode_steps=20,
 )
+
+register(
+    id='pdomains-speedy-tool-delivery-v0',
+    entry_point='pdomains.speedy_tool_delivery:SpeedyToolDeliveryEnv',
+    max_episode_steps=20,
+)
