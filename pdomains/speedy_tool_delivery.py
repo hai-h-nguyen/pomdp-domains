@@ -8,9 +8,9 @@ from gym.utils import seeding
 from general_bayes_adaptive_pomdps.domains.speedy_tool_delivery.macro_factored_all import ObjSearchDelivery_v4 as EnvToolDelivery
 
 class SpeedyToolDeliveryEnv(gym.Env):
-    def __init__(self, rendering=False):
+    def __init__(self, human_speeds=[20, 10], rendering=False):
 
-        self.human_speeds = [30, 10]
+        self.human_speeds = human_speeds
         self.core_env = EnvToolDelivery(human_speeds=self.human_speeds, render=rendering)
 
         self.action_space = spaces.Discrete(5)
@@ -112,11 +112,11 @@ class SpeedyToolDeliveryEnv(gym.Env):
         reward = -delta_time
 
         if self.human_speeds[0] < self.human_speeds[1]:
-            human0_wait_penalty = -5
-            human1_wait_penalty = -5
+            human0_wait_penalty = -30
+            human1_wait_penalty = -10
         else:
-            human0_wait_penalty = -5
-            human1_wait_penalty = -5
+            human0_wait_penalty = -10
+            human1_wait_penalty = -30
 
         # human 0
         prev_human0_stage = state[-4]
@@ -195,12 +195,18 @@ class SpeedyToolDeliveryEnv(gym.Env):
         return self._process_obs(obs)
 
 if __name__ == "__main__":
-    env = SpeedyToolDeliveryEnv()
-    print(len(env.reset()))
+    env = SpeedyToolDeliveryEnv(human_speeds=[10, 20])
+    env.reset()
 
-    print(env.step([0]))
-    print(env.step([3]))
-    print(env.step([1]))
-    print(env.step([3]))
-    print(env.step([2]))
-    print(env.step([3]))
+    print(env.step(0)[1])
+    print(env.step(0)[1])
+    print(env.step(3)[1])
+    print(env.step(4)[1])
+    print(env.step(1)[1])
+    print(env.step(1)[1])
+    print(env.step(3)[1])
+    print(env.step(4)[1])
+    print(env.step(2)[1])
+    print(env.step(2)[1])
+    print(env.step(3)[1])
+    print(env.step(4)[1])
