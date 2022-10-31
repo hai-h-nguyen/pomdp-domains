@@ -9,10 +9,12 @@ time.sleep(1)
 
 for i in range(1000):
     action = 1
-    obs, reward, done, _ = env.step(action)
+    obs, reward, done, info = env.step(action)
     print(reward)
     time.sleep(1)
     if done:
+        if "success" in info and info["success"] == True:
+            print("Success")
         env.reset()
         time.sleep(1)
         print()

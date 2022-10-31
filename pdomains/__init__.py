@@ -31,6 +31,12 @@ register(
 )
 
 register(
+    id='pdomains-light-house-2d-v0',
+    entry_point='pdomains.lighthouse_2d:LightHouseEnv',
+    max_episode_steps=100,
+)
+
+register(
     id='pdomains-lava-crossing-v0',
     entry_point='pdomains.lava_crossing_s25n10:LavaCrossingS25N10Env',
     max_episode_steps=100,
