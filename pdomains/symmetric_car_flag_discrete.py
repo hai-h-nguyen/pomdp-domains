@@ -18,9 +18,6 @@ class CarEnv(gym.Env):
 
         self.setup_view = False
 
-        self.min_action = -1.0
-        self.max_action = 1.0
-
         self.heaven_position = 1.0
         self.hell_position = -1.0
         self.priest_position = 0.0
@@ -81,24 +78,20 @@ class CarEnv(gym.Env):
 
         env_reward = STEP_PENALTY
 
-        if (self.heaven_position > self.hell_position):
-            if (position >= self.heaven_position):
-                env_reward += FOUND_HEAVEN_REWARD
-                self.reached_heaven = True
+        dist_2_heaven = abs(position - self.heaven_position)
+        dist_2_hell = abs(position - self.hell_position)
 
-            if (position <= self.hell_position):
-                env_reward += FOUND_HELL_REWARD
+        if dist_2_heaven <= 0.05:
+            self.reached_heaven = True
+            env_reward += FOUND_HEAVEN_REWARD
 
-        if (self.heaven_position < self.hell_position):
-            if (position <= self.heaven_position):
-                env_reward += FOUND_HEAVEN_REWARD
-                self.reached_heaven = True
-
-            if (position >= self.hell_position):
-                env_reward += FOUND_HELL_REWARD
+        if dist_2_hell <= 0.05:
+            assert self.reached_heaven is False
+            env_reward += FOUND_HELL_REWARD
 
         direction = 0.0
-        if position == self.priest_position:
+        dist_2_priest = abs(position - self.priest_position)
+        if dist_2_priest <= 0.05:
             if (self.heaven_position > self.hell_position):
                 # Heaven on the right
                 direction = 1.0
@@ -143,12 +136,15 @@ class CarEnv(gym.Env):
 
         self.hell_position = -self.heaven_position
 
+        range = [1, 2, 3, -1, -2, -3]
+        range = [-1]
+        pos = random.choice(range)*self.delta
+        self.state = np.array([pos, 0.0])
+
         if self.viewer is not None:
             self._draw_flags()
+            self.render()
 
-        range = [1, 2, 3, -1, -2, -3]
-        pos = random.choice(range)
-        self.state = np.array([pos*self.delta, 0.0])
         return np.array(self.state)
 
     def _height(self, xs):
