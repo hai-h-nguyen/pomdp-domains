@@ -137,7 +137,6 @@ class CarEnv(gym.Env):
         self.hell_position = -self.heaven_position
 
         range = [1, 2, 3, -1, -2, -3]
-        range = [-1]
         pos = random.choice(range)*self.delta
         self.state = np.array([pos, 0.0])
 
