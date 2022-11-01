@@ -68,7 +68,10 @@ class CarEnv(gym.Env):
 
         self.steps_taken += 1
 
-        position += action[0]*self.delta
+        if action[0] == 1:
+            position += self.delta
+        else:
+            position += -self.delta
         if (position >= self.max_position): position = self.max_position
         if (position <= self.min_position): position = self.min_position
 
@@ -97,7 +100,7 @@ class CarEnv(gym.Env):
             else:
                 # Heaven on the left
                 direction = -1.0
-
+            
         self.state = np.array([position, direction])
 
         if self.show:

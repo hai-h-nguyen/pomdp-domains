@@ -8,7 +8,7 @@ obs = env.reset()
 time.sleep(1)
 
 for i in range(1000):
-    action = 1
+    action = 0
     obs, reward, done, info = env.step(action)
     print(reward)
     time.sleep(1)
