@@ -53,7 +53,6 @@ class CarEnv(gym.Env):
 
         self.seed()
 
-        self.max_ep_length = 50
         self.steps_taken = 0
         self.reached_heaven = False
 
@@ -92,7 +91,7 @@ class CarEnv(gym.Env):
         direction = 0.0
         dist_2_priest = abs(position - self.priest_position)
         if dist_2_priest <= 0.05:
-            if (self.heaven_position > self.hell_position):
+            if self.heaven_position > self.hell_position:
                 # Heaven on the right
                 direction = 1.0
             else:
@@ -129,15 +128,16 @@ class CarEnv(gym.Env):
         self.reached_heaven = False
 
         # Randomize the heaven/hell location
-        if (self.np_random.randint(2) == 0):
+        if self.np_random.randint(2) == 0:
             self.heaven_position = 1.0
         else:
             self.heaven_position = -1.0
 
         self.hell_position = -self.heaven_position
 
-        range = [1, 2, 3, -1, -2, -3]
-        pos = random.choice(range)*self.delta
+        # reduce the range to make sure the episode length is at least 2
+        pos_idices = [1, 2, 3, -1, -2, -3]
+        pos = random.choice(pos_idices)*self.delta
         self.state = np.array([pos, 0.0])
 
         if self.viewer is not None:
