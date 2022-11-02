@@ -19,6 +19,12 @@ register(
 )
 
 register(
+    id='pdomains-car-flag-symm-v1',
+    entry_point='pdomains.symmetric_car_flag_discrete_big:CarEnv',
+    max_episode_steps=50,
+)
+
+register(
     id='pdomains-car-flag-continuous-v0',
     entry_point='pdomains.car_flag_continuous:CarEnv',
     max_episode_steps=160,
