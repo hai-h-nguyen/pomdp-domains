@@ -81,7 +81,7 @@ class LightHouseEnv(gym.Env):
 
         return self.task.get_observations()['corner_fixed_radius_categorical']
 
-    def render(self, mode="human", **kwargs):
+    def render(self, mode="rgb_array", **kwargs):
         self.env.render()
 
     def step(self, action):

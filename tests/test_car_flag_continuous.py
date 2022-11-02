@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import gym
 import time
 
-env=gym.make('pdomains-car-flag-continuous-v0', rendering=True)
+env=gym.make('pdomains-car-flag-continuous-symm-v0', rendering=True)
 obs = env.reset()
 
 for i in range(1000000):

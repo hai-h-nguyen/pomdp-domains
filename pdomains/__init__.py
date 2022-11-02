@@ -31,6 +31,12 @@ register(
 )
 
 register(
+    id='pdomains-car-flag-continuous-symm-v0',
+    entry_point='pdomains.symmetric_car_flag_continuous:CarEnv',
+    max_episode_steps=160,
+)
+
+register(
     id='pdomains-light-house-v0',
     entry_point='pdomains.lighthouse:LightHouseEnv',
     max_episode_steps=100,
