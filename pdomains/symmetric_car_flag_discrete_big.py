@@ -107,7 +107,7 @@ class CarEnv(gym.Env):
         info["success"] = self.reached_heaven
 
         done = bool(
-            position >= max_position or position <= min_position
+            env_reward != STEP_PENALTY
         )
 
         return self.state, env_reward, done, info
