@@ -10,9 +10,9 @@ from tkinter import *
 from tkinter import ttk
 import time
 
-STEP_PENALTY = -0.01
-FOUND_HEAVEN_REWARD = 1.0
-FOUND_HELL_REWARD = -1.0
+IMAGE = 0
+IMAGE_NORMED_FLATTEN = 1
+VECTOR = 2
 
 class CarEnv(gym.Env):
     def __init__(self, seed=0, rendering=False):
@@ -92,11 +92,26 @@ class CarEnv(gym.Env):
             shape=self.img_size, low=0, high=1.0, dtype=np.float32
         )
 
-        self.observation_space = gym.spaces.Box(
-            shape=(np.array(self.img_size).prod(),), low=0, high=1.0, dtype=np.float32
-        )
+        self.obs_type = IMAGE
+
+        if self.obs_type == IMAGE_NORMED_FLATTEN:
+            self.observation_space = gym.spaces.Box(
+                shape=(np.array(self.img_size).prod(),), low=0, high=1.0, dtype=np.float32
+            )
+        elif self.obs_type == IMAGE:
+            self.observation_space = gym.spaces.Box(
+                shape=self.img_size, low=0, high=255.0, dtype=np.float32
+            )
+        else:
+            self.observation_space = gym.spaces.Box(
+                shape=(4,), low=0, high=1.0, dtype=np.float32
+            )
 
         self.goal_loc = None
+        self.enter_info = False
+
+        self.discount = 0.9
+        self.step_reward = 0.0
 
     def _convert_coordinate(self, coord_x, coord_y):
         """Convert a (x, y) point to a 1D number
@@ -121,8 +136,7 @@ class CarEnv(gym.Env):
         old_state = int(old_state)
 
         done = False
-        step_reward = -0.01
-        reward = step_reward
+        reward = self.step_reward
         enter_info_area = False
 
         self._state = self._get_next_state(self.state_mat, np.copy(old_state),action)
@@ -146,6 +160,7 @@ class CarEnv(gym.Env):
 
         if self._state in self.info_cells:
             # print("Get into info area")
+            self.enter_info = True
             if self.visualize:
                 self.canvas.itemconfig(self._state + 1, fill="yellow")
             enter_info_area = True
@@ -158,8 +173,11 @@ class CarEnv(gym.Env):
 
         obs = self._prepare_obs(self._state, self.goal_loc if enter_info_area else None)
 
+        if self.visualize:
+            time.sleep(0.1)
+
         info = {}
-        info["success"] = (reward != step_reward)
+        info["success"] = (reward != self.step_reward)
 
         return obs, reward, done, info
 
@@ -185,18 +203,20 @@ class CarEnv(gym.Env):
 
 
     def reset(self):
-        goal_locations = [[0, 0], [self.grid_len - 1, self.grid_len - 1],
-                          [0, self.grid_len - 1], [self.grid_len - 1, 0]]
+        # Clear the previous goal coors
+        if self.goal_loc is not None and self.visualize:
+            self.canvas.itemconfig(self.goal_loc + 1, fill="white")
 
-        # Clear all previous goal areas
-        for goal_loc in goal_locations:
-            self._color_goal_area(goal_loc, color='white')
+        self.enter_info = False
 
-        # Hightlight a chosen goal area
-        goal_loc = random.choice(goal_locations)
-        self._color_goal_area(goal_loc)
+        self.goal_loc = random.randint(0, self.grid_len**2 - 1)
 
-        self.goal_loc = goal_loc[0] * self.grid_len + goal_loc[1]
+        while self.goal_loc in self.info_cells:
+            self.goal_loc = random.randint(0, self.grid_len**2 - 1)
+
+        # Hightlight the chosen goal area
+        if self.visualize:
+            self.canvas.itemconfig(self.goal_loc + 1, fill="green")
 
         # Initialize the position such that it doesn't overlap w/ the goal
         # or the info coords or is not far enough from the goal
@@ -226,15 +246,36 @@ class CarEnv(gym.Env):
             goal (int, optional): goal position. Defaults to None.
         """
 
-        obs = np.zeros((2, self.grid_len, self.grid_len))
+        if self.obs_type in [IMAGE_NORMED_FLATTEN, IMAGE]:
+            obs = np.zeros((2, self.grid_len, self.grid_len))
+        else:
+            obs = np.zeros((self.grid_len, self.grid_len))
         x, y = self._state_to_xy(state)
-        obs[0, y, x] = 1.0
+
+        if self.obs_type == IMAGE:
+            obs[0, y, x] = 255.0
+        elif self.obs_type == IMAGE_NORMED_FLATTEN:
+            obs[0, y, x] = 1.0
 
         if goal is not None:
-            xg, yg = self._state_to_xy(goal)
-            obs[1, yg, xg] = 1.0
+            xg, yg = self._state_to_xy(self.goal_loc)
+            if self.obs_type == IMAGE:
+                obs[1, yg, xg] = 255.0
+            elif self.obs_type == IMAGE_NORMED_FLATTEN:
+                obs[1, yg, xg] = 1.0
 
-        return obs.flatten()
+        # for coord in self.info_coords:
+        #     obs[0, coord[1], coord[0]] = 1.0
+        if goal is None:
+            xg, yg = 0.0, 0.0
+
+        if self.obs_type == VECTOR:
+            obs = np.array([x, y, xg, yg])/self.grid_len
+
+        if self.obs_type == IMAGE_NORMED_FLATTEN:
+            return obs.flatten()
+
+        return obs
 
 
     def _state_to_xy(self, state):
