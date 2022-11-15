@@ -70,7 +70,7 @@ class CarEnv(gym.Env):
         self.flag_pos_2 = -1.0
 
     def query_expert(self):
-        if (self.heaven_position > self.hell_position):
+        if self.heaven_position > self.hell_position:
             return [1.0]
         else:
             return [-1.0]
