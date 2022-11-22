@@ -18,18 +18,20 @@ class BlockEnv(gym.Env):
                                 [-0.2, 0.2],
                                 [0.01, 0.25]])
 
-        self.env_config = {'workspace': workspace, 'max_steps': 100, 'obs_size': 84, 'render': False, 'fast_mode': True,
+        self.image_size = 84
+
+        self.env_config = {'workspace': workspace, 'max_steps': 100, 'obs_size': self.image_size, 'render': False, 'fast_mode': True,
                         'seed': seed, 'action_sequence': action_sequence, 'num_objects': 1, 'random_orientation': False,
                         'reward_type': 'sparse', 'simulate_grasp': True, 'perfect_grasp': False, 'robot': robot,
                         'workspace_check': 'point', 'physics_mode': 'fast', 'hard_reset_freq': 1000, 'view_scale': 1.0,
                         'object_scale_range': (1, 1), 'obs_type': 'pixel',
-                        'view_type': 'camera_center_z_height'}
+                        'view_type': 'camera_center_xyz'}
 
         self.planner_config = {'random_orientation': True, 'dpos': 0.05, 'drot': np.pi/8}
 
         self.xyz_range = self.planner_config['dpos']
         self.r_range = self.planner_config['drot']
-
+        
         self.env_config['render'] = rendering
         self.seed(seed)
         self.core_env = env_factory.createSingleProcessEnv('close_loop_pomdp_block_picking',
@@ -45,18 +47,75 @@ class BlockEnv(gym.Env):
         high_action = np.ones(self.action_dim)
         self.action_space = spaces.Box(-high_action, high_action)
 
-        low = np.zeros((84, 84, 3))
-        high = np.ones((84, 84, 3))
-        self.observation_space = spaces.Box(low=low, high=high, shape=(84, 84, 3), dtype=np.float32)
+        low = np.zeros((2, self.image_size, self.image_size))
+        high = np.ones((2, self.image_size, self.image_size))
+        self.observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
+
+        self.img_size = (2, self.image_size, self.image_size)
+        self.image_space = gym.spaces.Box(
+            shape=self.img_size, low=0, high=1.0, dtype=np.float32
+        )
+        # self.observation_space = gym.spaces.Box(
+        #     shape=(np.array(self.img_size).prod(),), low=0, high=1.0, dtype=np.float32
+        # )
 
         self.target_obj_idx = 0
 
-        self.first_obs = None
-        self.cnt_reset = 0
+        self.step_cnt = 0
 
-    def query_expert(self):
+    def query_expert(self, episode_idx):
+        """_summary_
+
+        Args:
+            episode_idx (int): used to choose whether to pick the movable/immovable block first
+
+        Returns:
+            _type_: expert action
+        """
+        if episode_idx % 2 == 0:
+            return self.pick_movable()
+        else:
+            if self.step_cnt <= 10:
+                return self.pick_immovable()
+            elif self.step_cnt <= 15:
+                return self.move_up()
+            else:
+                return self.pick_movable()
+
+    def pick_movable(self):
+        """pick the movable block"""
         action = self.core_env.getNextAction(self.target_obj_idx)
         action[1:4] /= self.xyz_range
+
+        if self.action_dim == 5:
+            action[4] /= self.r_range
+
+        if self.env_config['robot'] == 'kuka':
+            action[0] = 2*action[0] - 1
+
+        return action
+
+    def pick_immovable(self):
+        """pick the immovable block"""
+        action = self.core_env.getNextAction(1 - self.target_obj_idx)
+        action[1:4] /= self.xyz_range
+
+        if self.action_dim == 5:
+            action[4] /= self.r_range
+
+        if self.env_config['robot'] == 'kuka':
+            action[0] = 2*action[0] - 1
+
+        return action
+
+    def move_up(self):
+        """pick the immovable block"""
+        action = self.core_env.getNextAction(1 - self.target_obj_idx)
+        action[1:4] /= self.xyz_range
+
+        action[1] = 0.0
+        action[2] = 0.0
+        action[3] = 1.0
 
         if self.action_dim == 5:
             action[4] /= self.r_range
@@ -97,14 +156,14 @@ class BlockEnv(gym.Env):
 
     def _process_obs(self, state, obs, reward):
         if self.include_noise:
-            obs += 0.007*self.rand_perlin_2d((84, 84), (
+            obs += 0.007*self.rand_perlin_2d((self.image_size, self.image_size), (
                 (np.random.choice([1, 2, 4, 6], 1)[0]),
                 int(np.random.choice([1, 2, 4, 6], 1)[0]))).numpy()
 
         state_tile = state*np.ones((1, obs.shape[1], obs.shape[2]))
-        reward_tile = reward*np.ones((1, obs.shape[1], obs.shape[2]))
-        stacked = np.concatenate([obs, state_tile, reward_tile], axis=0)
-        return np.transpose(stacked, (2, 1, 0))
+        # reward_tile = reward*np.ones((1, obs.shape[1], obs.shape[2]))
+        stacked = np.concatenate([obs, state_tile], axis=0)
+        return stacked
 
     def step(self, action):
         action[1:4] *= self.xyz_range  # scale from [-1, 1] to [-0.05, 0.05] for xyz
@@ -125,6 +184,8 @@ class BlockEnv(gym.Env):
 
         info["success"] = done and (reward > 0)
 
+        self.step_cnt += 1
+
         if self.show:
             self.render()
 
@@ -135,16 +196,12 @@ class BlockEnv(gym.Env):
 
     def reset(self):
         self.target_obj_idx = 1 - self.target_obj_idx
-        self.cnt_reset += 1
+        self.step_cnt = 0
         (state, _, obs) = self.core_env.reset(self.target_obj_idx, noise=self.include_noise)
 
         # plt.imshow(obs[0], vmin=0, vmax=0.2)
         # plt.show()
 
-        # if self.cnt_reset == 2:
-        #     self.first_obs = obs
-        # elif self.cnt_reset > 2:
-        #     print(np.min(self.first_obs - obs), np.max(self.first_obs - obs))
         self.obs = self._process_obs(state, obs, 0.0)
         return self.obs
 

@@ -4,9 +4,7 @@ import numpy as np
 import gym
 from gym import spaces
 from gym.utils import seeding
-import socket
-if socket.gethostname() not in ['theseus', 'titan']:  # will cause errors for remote computers
-    from gym.envs.classic_control import rendering as visualize
+from gym.envs.classic_control import rendering as visualize
 import random
 import time
 
@@ -25,7 +23,7 @@ class CarEnv(gym.Env):
         self.heaven_hell_position = self.max_position - self.delta
         self.heaven_position = self.heaven_hell_position
         self.hell_position = -self.heaven_hell_position
-        self.priest_position = 0.0
+        self.priest_position = 2.0
 
         self.viewer = None
         self.show = rendering
@@ -157,10 +155,9 @@ class CarEnv(gym.Env):
 
     def _draw_flags(self):
         scale = self.scale
-
-        # First flag
-        flagx = (self.heaven_hell_position-self.min_position)*scale
-        flagy1 = self._height(self.heaven_hell_position)*scale
+        # Flag Heaven
+        flagx = (abs(self.heaven_position)-self.min_position)*scale
+        flagy1 = self._height(self.heaven_position)*scale
         flagy2 = flagy1 + 50
         flagpole = visualize.Line((flagx, flagy1), (flagx, flagy2))
         self.viewer.add_geom(flagpole)
@@ -176,9 +173,9 @@ class CarEnv(gym.Env):
 
         self.viewer.add_geom(flag)
 
-        # Second flag
-        flagx = (-self.heaven_hell_position-self.min_position)*scale
-        flagy1 = self._height(self.heaven_hell_position)*scale
+        # Flag Hell
+        flagx = (-abs(self.heaven_position)-self.min_position)*scale
+        flagy1 = self._height(self.hell_position)*scale
         flagy2 = flagy1 + 50
         flagpole = visualize.Line((flagx, flagy1), (flagx, flagy2))
         self.viewer.add_geom(flagpole)
@@ -194,7 +191,7 @@ class CarEnv(gym.Env):
 
         self.viewer.add_geom(flag)
 
-        # BLUE flag for priest
+        # BLUE for priest
         flagx = (self.priest_position-self.min_position)*scale
         flagy1 = self._height(self.priest_position)*scale
         flagy2 = flagy1 + 50
@@ -203,8 +200,6 @@ class CarEnv(gym.Env):
         flag = visualize.FilledPolygon(
             [(flagx, flagy2), (flagx, flagy2 - 10), (flagx + 25, flagy2 - 5)]
         )
-
-        # fixed color
         flag.set_color(0.0, 0.0, 1.0)
         self.viewer.add_geom(flag)
 

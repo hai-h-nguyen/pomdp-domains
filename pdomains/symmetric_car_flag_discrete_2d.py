@@ -4,7 +4,6 @@ import numpy as np
 import gym
 from gym import spaces
 from gym.utils import seeding
-from gym.envs.classic_control import rendering as visualize
 import random
 from tkinter import *
 from tkinter import ttk
