@@ -12,7 +12,7 @@ import math
 import torch
 
 class BlockEnv(gym.Env):
-    def __init__(self, seed=0, rendering=False, robot='kuka', action_sequence='pxyz', noise=False):
+    def __init__(self, seed=0, rendering=False, robot='kuka', action_sequence='pxyzr', noise=False):
 
         workspace = np.asarray([[0.3, 0.7],
                                 [-0.2, 0.2],
@@ -21,7 +21,7 @@ class BlockEnv(gym.Env):
         self.image_size = 84
 
         self.env_config = {'workspace': workspace, 'max_steps': 100, 'obs_size': self.image_size, 'render': False, 'fast_mode': True,
-                        'seed': seed, 'action_sequence': action_sequence, 'num_objects': 1, 'random_orientation': False,
+                        'seed': seed, 'action_sequence': action_sequence, 'num_objects': 1, 'random_orientation': True,
                         'reward_type': 'sparse', 'simulate_grasp': True, 'perfect_grasp': False, 'robot': robot,
                         'workspace_check': 'point', 'physics_mode': 'fast', 'hard_reset_freq': 1000, 'view_scale': 1.0,
                         'object_scale_range': (1, 1), 'obs_type': 'pixel',
