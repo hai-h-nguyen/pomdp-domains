@@ -175,9 +175,6 @@ class BlockEnv(gym.Env):
             action[0] = 0.5 * (action[0] + 1)  # [-1, 1] to [0, 1] for p
         (state, _, obs), reward, done = self.core_env.step(action)
 
-        # plt.imshow(obs[0], vmin=0, vmax=0.2)
-        # plt.show()
-
         self.obs = self._process_obs(state, obs, reward)
 
         info = {}
@@ -198,11 +195,8 @@ class BlockEnv(gym.Env):
         self.target_obj_idx = 1 - self.target_obj_idx
         self.step_cnt = 0
         (state, _, obs) = self.core_env.reset(self.target_obj_idx, noise=self.include_noise)
-
-        # plt.imshow(obs[0], vmin=0, vmax=0.2)
-        # plt.show()
-
         self.obs = self._process_obs(state, obs, 0.0)
+
         return self.obs
 
     def close(self):

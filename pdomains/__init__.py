@@ -25,6 +25,12 @@ register(
 )
 
 register(
+    id='pdomains-car-flag-symm-2d-v1',
+    entry_point='pdomains.symmetric_car_flag_discrete_2d_11x11:CarEnv',
+    max_episode_steps=50,
+)
+
+register(
     id='pdomains-block-picking-v0',
     entry_point='pdomains.block_picking:BlockEnv',
     max_episode_steps=50,
