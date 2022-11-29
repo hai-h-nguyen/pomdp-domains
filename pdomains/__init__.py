@@ -7,6 +7,12 @@ register(
 )
 
 register(
+    id='pdomains-car-flag-symm-v2',
+    entry_point='pdomains.symmetric_car_flag_discrete_1d_25:CarEnv',
+    max_episode_steps=50,
+)
+
+register(
     id='pdomains-car-flag-asymm-v0',
     entry_point='pdomains.asymmetric_car_flag_discrete_1d:CarEnv',
     max_episode_steps=50,
@@ -33,5 +39,11 @@ register(
 register(
     id='pdomains-block-picking-v0',
     entry_point='pdomains.block_picking:BlockEnv',
+    max_episode_steps=50,
+)
+
+register(
+    id='pdomains-block-pulling-v0',
+    entry_point='pdomains.block_pulling:BlockEnv',
     max_episode_steps=50,
 )
