@@ -21,7 +21,7 @@ class BlockEnv(gym.Env):
         self.image_size = 84
 
         self.env_config = {'workspace': workspace, 'max_steps': 100, 'obs_size': self.image_size, 'render': False, 'fast_mode': True,
-                        'seed': seed, 'action_sequence': action_sequence, 'num_objects': 1, 'random_orientation': False,
+                        'seed': seed, 'action_sequence': action_sequence, 'num_objects': 2, 'random_orientation': True,
                         'reward_type': 'sparse', 'simulate_grasp': True, 'perfect_grasp': False, 'robot': robot,
                         'workspace_check': 'point', 'physics_mode': 'fast', 'hard_reset_freq': 1000, 'view_scale': 1.0,
                         'object_scale_range': (1, 1), 'obs_type': 'pixel',
@@ -34,7 +34,7 @@ class BlockEnv(gym.Env):
         
         self.env_config['render'] = rendering
         self.seed(seed)
-        self.core_env = env_factory.createSingleProcessEnv('close_loop_pomdp_block_pulling',
+        self.core_env = env_factory.createSingleProcessEnv('close_loop_pomdp_block_stacking',
                                                             self.env_config,
                                                             self.planner_config)
 
@@ -65,55 +65,6 @@ class BlockEnv(gym.Env):
 
         self.old_obs = None
 
-    def query_expert(self, episode_idx):
-        """_summary_
-
-        Args:
-            episode_idx (int): used to choose whether to pick the movable/immovable block first
-
-        Returns:
-            _type_: expert action
-        """
-        if episode_idx % 2 == 1:
-            return self.pull_movable()
-        else:
-            if self.step_cnt <= 10:
-                return self.pull_immovable()
-            elif self.step_cnt <= 12:
-                self.signal_reset_target()
-                return self.move_up()
-            else:
-                return self.pull_movable()
-
-    def signal_reset_target(self):
-        self.core_env.getNextAction(2)
-
-    def pull_movable(self):
-        """pull the movable block"""
-        action = self.core_env.getNextAction(1)
-        action[1:4] /= self.xyz_range
-
-        if self.action_dim == 5:
-            action[4] /= self.r_range
-
-        if self.env_config['robot'] == 'kuka':
-            action[0] = 2*action[0] - 1
-
-        return action
-
-    def pull_immovable(self):
-        """pull the immovable block"""
-        action = self.core_env.getNextAction(0)
-        action[1:4] /= self.xyz_range
-
-        if self.action_dim == 5:
-            action[4] /= self.r_range
-
-        if self.env_config['robot'] == 'kuka':
-            action[0] = 2*action[0] - 1
-
-        return action
-
     # def query_expert(self):
     #     """pick the movable block"""
     #     action = self.core_env.getNextAction(0)
@@ -127,20 +78,62 @@ class BlockEnv(gym.Env):
 
     #     return action
 
-    def move_up(self):
-        """pick the immovable block"""
-        action = self.core_env.getNextAction(1 - self.target_obj_idx)
-        action[1:4] /= self.xyz_range
+    def query_expert(self, episode_idx):
+        """_summary_
 
-        action[1] = 0.0
-        action[2] = 0.0
-        action[3] = 1.0
+        Args:
+            episode_idx (int): used to choose whether to pick the movable/immovable block first
+
+        Returns:
+            _type_: expert action
+        """
+        if episode_idx % 2 == 0:
+            if self.step_cnt <= 5:
+                return self.pick_this_object(0)
+            else:
+                return self.pick_this_object(2)
+        else:
+            if self.step_cnt <= 5:
+                # pre-pick
+                return self.pick_this_object(1)
+            elif self.step_cnt <= 10:
+                # actual pick
+                return self.pick_this_object(3)
+            elif self.step_cnt <= 15:
+                # pre-pick
+                return self.pick_this_object(0)
+            elif self.step_cnt <= 20:
+                # actual pick
+                return self.pick_this_object(2)
+            else:
+                return self.pick_this_object(2)
+
+    def pick_this_object(self, obj_idx):
+        action = self.core_env.getNextAction(obj_idx)
+        action[1:4] /= self.xyz_range
 
         if self.action_dim == 5:
             action[4] /= self.r_range
 
         if self.env_config['robot'] == 'kuka':
             action[0] = 2*action[0] - 1
+
+        return action
+
+    def move_up(self):
+        """pick the immovable block"""
+        action = np.zeros(self.action_dim)
+        action[3] = 1.0
+
+        # action[1] = 0.0
+        # action[2] = 0.0
+        # action[3] = 0.0
+
+        # if self.action_dim == 5:
+        #     action[4] /= self.r_range
+
+        # if self.env_config['robot'] == 'kuka':
+        #     action[0] = 2*action[0] - 1
 
         return action
 

@@ -47,3 +47,10 @@ register(
     entry_point='pdomains.block_pulling:BlockEnv',
     max_episode_steps=50,
 )
+
+register(
+    id='pdomains-block-stacking-v0',
+    entry_point='pdomains.block_stacking:BlockEnv',
+    max_episode_steps=50,
+)
+
