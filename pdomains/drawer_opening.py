@@ -78,7 +78,7 @@ class DrawerEnv(gym.Env):
 
         return action
 
-    def _query_expert(self, episode_idx):
+    def query_expert(self, episode_idx):
         """_summary_
 
         Args:
@@ -87,29 +87,36 @@ class DrawerEnv(gym.Env):
         Returns:
             _type_: expert action
         """
-        if episode_idx % 2 == 0:
-            if self.step_cnt <= 5:
-                return self.pick_this_object(0)
-            else:
-                return self.pick_this_object(2)
+        if episode_idx % 2 == 1:
+            return self.pull_movable_drawer()
         else:
-            if self.step_cnt <= 5:
-                # pre-pick
-                return self.pick_this_object(1)
-            elif self.step_cnt <= 10:
-                # actual pick
-                return self.pick_this_object(3)
-            elif self.step_cnt <= 15:
-                # pre-pick
-                return self.pick_this_object(0)
-            elif self.step_cnt <= 20:
-                # actual pick
-                return self.pick_this_object(2)
+            if self.step_cnt <= 8:
+                return self.pull_locked_drawer()
+            elif self.step_cnt <= 9:
+                self.signal_reset_target()
+                return self.move_up()
             else:
-                return self.pick_this_object(2)
+                return self.pull_movable_drawer()
 
-    def pick_this_object(self, obj_idx):
-        action = self.core_env.getNextAction(obj_idx)
+    def signal_reset_target(self):
+        self.core_env.getNextAction(2)
+
+    def pull_movable_drawer(self):
+        """pull the movable block"""
+        action = self.core_env.getNextAction(0)
+        action[1:4] /= self.xyz_range
+
+        if self.action_dim == 5:
+            action[4] /= self.r_range
+
+        if self.env_config['robot'] == 'kuka':
+            action[0] = 2*action[0] - 1
+
+        return action
+
+    def pull_locked_drawer(self):
+        """pull the immovable block"""
+        action = self.core_env.getNextAction(1)
         action[1:4] /= self.xyz_range
 
         if self.action_dim == 5:
@@ -122,18 +129,18 @@ class DrawerEnv(gym.Env):
 
     def move_up(self):
         """pick the immovable block"""
-        action = np.zeros(self.action_dim)
+        action = self.core_env.getNextAction(1 - self.target_obj_idx)
+        action[1:4] /= self.xyz_range
+
+        action[1] = 0.0
+        action[2] = 0.0
         action[3] = 1.0
 
-        # action[1] = 0.0
-        # action[2] = 0.0
-        # action[3] = 0.0
+        if self.action_dim == 5:
+            action[4] /= self.r_range
 
-        # if self.action_dim == 5:
-        #     action[4] /= self.r_range
-
-        # if self.env_config['robot'] == 'kuka':
-        #     action[0] = 2*action[0] - 1
+        if self.env_config['robot'] == 'kuka':
+            action[0] = 2*action[0] - 1
 
         return action
 

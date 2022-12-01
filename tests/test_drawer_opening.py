@@ -7,16 +7,17 @@ obs = env.reset()
 
 cnt = 0
 ep_idx = 0
+success_ep_idx = 0
 
-for i in range(1000):
+while ep_idx <= 100:
     # action = env.action_space.sample()
     action = env.query_expert(ep_idx)
     obs, reward, done, info = env.step(action)
     cnt += 1
     if done:
-        print(cnt)
-        print(info)
-        print(ep_idx)
+        if info["success"]:
+            success_ep_idx += 1
+        print(cnt, success_ep_idx, ep_idx)
         ep_idx += 1
         cnt = 0
         env.reset()
