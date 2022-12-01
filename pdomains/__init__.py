@@ -54,3 +54,9 @@ register(
     max_episode_steps=50,
 )
 
+register(
+    id='pdomains-drawer-opening-v0',
+    entry_point='pdomains.drawer_opening:DrawerEnv',
+    max_episode_steps=50,
+)
+
