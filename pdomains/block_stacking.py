@@ -88,7 +88,7 @@ class BlockEnv(gym.Env):
             _type_: expert action
         """
         if episode_idx % 2 == 0:
-            if self.step_cnt <= 5:
+            if self.step_cnt <= 2:
                 return self.pick_this_object(0)
             else:
                 return self.pick_this_object(2)
@@ -96,15 +96,15 @@ class BlockEnv(gym.Env):
             if self.step_cnt <= 5:
                 # pre-pick
                 return self.pick_this_object(1)
-            elif self.step_cnt <= 10:
+            elif self.step_cnt <= 8:
                 # actual pick
                 return self.pick_this_object(3)
-            elif self.step_cnt <= 15:
+            elif self.step_cnt <= 12:
                 # pre-pick
                 return self.pick_this_object(0)
-            elif self.step_cnt <= 20:
+            # elif self.step_cnt <= 15:
                 # actual pick
-                return self.pick_this_object(2)
+                # return self.pick_this_object(2)
             else:
                 return self.pick_this_object(2)
 

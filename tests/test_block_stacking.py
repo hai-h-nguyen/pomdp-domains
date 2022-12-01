@@ -14,9 +14,7 @@ for i in range(1000):
     obs, reward, done, info = env.step(action)
     cnt += 1
     if done:
-        print(cnt)
-        print(info)
-        print(ep_idx)
+        print(cnt, info, ep_idx)
         ep_idx += 1
         cnt = 0
         env.reset()
