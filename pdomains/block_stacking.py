@@ -12,13 +12,15 @@ import math
 import torch
 
 class BlockEnv(gym.Env):
-    def __init__(self, seed=0, rendering=False, robot='kuka', action_sequence='pxyzr', noise=False):
+    def __init__(self, seed=0, img_size=84, rendering=False, robot='kuka', action_sequence='pxyzr', noise=False):
 
         workspace = np.asarray([[0.3, 0.7],
                                 [-0.2, 0.2],
                                 [0.01, 0.25]])
 
-        self.image_size = 84
+        self.image_size = img_size
+        # in RAD envs, image_size is greater than true_image_size
+        self.true_image_size = 84
 
         self.env_config = {'workspace': workspace, 'max_steps': 100, 'obs_size': self.image_size, 'render': False, 'fast_mode': True,
                         'seed': seed, 'action_sequence': action_sequence, 'num_objects': 2, 'random_orientation': True,
@@ -47,11 +49,11 @@ class BlockEnv(gym.Env):
         high_action = np.ones(self.action_dim)
         self.action_space = spaces.Box(-high_action, high_action)
 
-        low = np.zeros((2, self.image_size, self.image_size))
-        high = np.ones((2, self.image_size, self.image_size))
+        low = np.zeros((2, self.true_image_size, self.true_image_size))
+        high = np.ones((2, self.true_image_size, self.true_image_size))
         self.observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
 
-        self.img_size = (2, self.image_size, self.image_size)
+        self.img_size = (2, self.true_image_size, self.true_image_size)
         self.image_space = gym.spaces.Box(
             shape=self.img_size, low=0, high=1.0, dtype=np.float32
         )
