@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import gym
 import time
 
-env=gym.make('pdomains-car-flag-symm-2d-v1', rendering=True)
+env=gym.make('pdomains-car-flag-n10-v0', rendering=True)
 obs = env.reset()
 time.sleep(1)
 

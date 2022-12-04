@@ -15,7 +15,7 @@ FOUND_HEAVEN_REWARD = 1.0
 FOUND_HELL_REWARD = -1.0
 
 class CarEnv(gym.Env):
-    def __init__(self, seed=0, rendering=False):
+    def __init__(self, seed=0, priest_pos=0.0, rendering=False):
         self.max_position = 4.2
         self.min_position = -self.max_position
 
@@ -25,7 +25,7 @@ class CarEnv(gym.Env):
         self.heaven_hell_position = self.max_position - self.delta
         self.heaven_position = self.heaven_hell_position
         self.hell_position = -self.heaven_hell_position
-        self.priest_position = 0.0
+        self.priest_position = priest_pos*self.delta
 
         self.viewer = None
         self.show = rendering

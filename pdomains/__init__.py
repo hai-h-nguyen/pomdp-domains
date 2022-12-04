@@ -13,9 +13,31 @@ register(
 )
 
 register(
-    id='pdomains-car-flag-asymm-v0',
-    entry_point='pdomains.asymmetric_car_flag_discrete_1d:CarEnv',
+    id='pdomains-car-flag-n5-v0',
+    entry_point='pdomains.symmetric_car_flag_discrete_1d:CarEnv',
     max_episode_steps=50,
+    kwargs={"priest_pos": -5.0}
+)
+
+register(
+    id='pdomains-car-flag-p5-v0',
+    entry_point='pdomains.symmetric_car_flag_discrete_1d:CarEnv',
+    max_episode_steps=50,
+    kwargs={"priest_pos": 5.0}
+)
+
+register(
+    id='pdomains-car-flag-n10-v0',
+    entry_point='pdomains.symmetric_car_flag_discrete_1d:CarEnv',
+    max_episode_steps=50,
+    kwargs={"priest_pos": -10.0}
+)
+
+register(
+    id='pdomains-car-flag-p10-v0',
+    entry_point='pdomains.symmetric_car_flag_discrete_1d:CarEnv',
+    max_episode_steps=50,
+    kwargs={"priest_pos": 10.0}
 )
 
 register(
