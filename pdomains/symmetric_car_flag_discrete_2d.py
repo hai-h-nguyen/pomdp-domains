@@ -14,7 +14,7 @@ IMAGE_NORMED_FLATTEN = 1
 VECTOR = 2
 
 class CarEnv(gym.Env):
-    def __init__(self, seed=0, rendering=False):
+    def __init__(self, seed=0, info_offset=0, rendering=False):
 
         self.visualize = rendering
 
@@ -62,7 +62,7 @@ class CarEnv(gym.Env):
                     self.canvas.create_rectangle(x_1, y_1, x_2, y_2, fill=color)
 
         assert (self.grid_len - 1) % 2 == 0
-        mid = self.grid_len//2
+        mid = self.grid_len//2 + int(info_offset)
         self.info_coords = [[mid-1, mid], [mid, mid], [mid+1, mid],
                     [mid-1, mid-1], [mid, mid-1], [mid+1, mid-1],
                     [mid-1, mid+1], [mid, mid+1], [mid+1, mid+1]]

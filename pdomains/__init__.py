@@ -53,6 +53,34 @@ register(
 )
 
 register(
+    id='pdomains-car-flag-symm-2d-p1-v0',
+    entry_point='pdomains.symmetric_car_flag_discrete_2d:CarEnv',
+    max_episode_steps=50,
+    kwargs={"info_offset": 1}
+)
+
+register(
+    id='pdomains-car-flag-symm-2d-n1-v0',
+    entry_point='pdomains.symmetric_car_flag_discrete_2d:CarEnv',
+    max_episode_steps=50,
+    kwargs={"info_offset": -1}
+)
+
+register(
+    id='pdomains-car-flag-symm-2d-p2-v0',
+    entry_point='pdomains.symmetric_car_flag_discrete_2d:CarEnv',
+    max_episode_steps=50,
+    kwargs={"info_offset": 2}
+)
+
+register(
+    id='pdomains-car-flag-symm-2d-n2-v0',
+    entry_point='pdomains.symmetric_car_flag_discrete_2d:CarEnv',
+    max_episode_steps=50,
+    kwargs={"info_offset": -2}
+)
+
+register(
     id='pdomains-car-flag-symm-2d-v1',
     entry_point='pdomains.symmetric_car_flag_discrete_2d_11x11:CarEnv',
     max_episode_steps=50,
