@@ -93,6 +93,12 @@ register(
 )
 
 register(
+    id='pdomains-block-picking-64-v0',
+    entry_point='pdomains.block_picking_64:BlockEnv',
+    max_episode_steps=50,
+)
+
+register(
     id='pdomains-block-pulling-v0',
     entry_point='pdomains.block_pulling:BlockEnv',
     max_episode_steps=50,
