@@ -177,7 +177,7 @@ class BlockEnv(gym.Env):
 
     def _process_obs(self, state, obs, reward):
         if self.include_noise:
-            obs += 0.007*self.rand_perlin_2d((self.image_size, self.image_size), (
+            obs[0] += 0.007*self.rand_perlin_2d((self.image_size, self.image_size), (
                 (np.random.choice([1, 2, 4, 6], 1)[0]),
                 int(np.random.choice([1, 2, 4, 6], 1)[0]))).numpy()
 
