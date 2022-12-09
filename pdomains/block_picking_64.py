@@ -166,6 +166,8 @@ class BlockEnv(gym.Env):
         state_tile = state*np.ones((1, obs.shape[1], obs.shape[2]))
         # reward_tile = reward*np.ones((1, obs.shape[1], obs.shape[2]))
         stacked = np.concatenate([obs, state_tile], axis=0)
+
+        stacked = (stacked*255).astype(np.uint8)
         return stacked
 
     def step(self, action):
