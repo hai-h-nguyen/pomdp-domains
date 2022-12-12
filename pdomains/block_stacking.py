@@ -33,7 +33,7 @@ class BlockEnv(gym.Env):
 
         self.xyz_range = self.planner_config['dpos']
         self.r_range = self.planner_config['drot']
-        
+
         self.env_config['render'] = rendering
         self.seed(seed)
         self.core_env = env_factory.createSingleProcessEnv('close_loop_pomdp_block_stacking',
@@ -98,16 +98,14 @@ class BlockEnv(gym.Env):
             if self.step_cnt <= 5:
                 # pre-pick
                 return self.pick_this_object(1)
-            elif self.step_cnt <= 8:
+            elif self.step_cnt <= 10:
                 # actual pick
                 return self.pick_this_object(3)
             elif self.step_cnt <= 12:
                 # pre-pick
                 return self.pick_this_object(0)
-            # elif self.step_cnt <= 15:
-                # actual pick
-                # return self.pick_this_object(2)
             else:
+                # actual pick
                 return self.pick_this_object(2)
 
     def pick_this_object(self, obj_idx):
