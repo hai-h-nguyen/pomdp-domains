@@ -80,6 +80,34 @@ class BlockEnv(gym.Env):
 
     #     return action
 
+    # def query_expert(self, episode_idx):
+    #     """_summary_
+
+    #     Args:
+    #         episode_idx (int): used to choose whether to pick the movable/immovable block first
+
+    #     Returns:
+    #         _type_: expert action
+    #     """
+    #     if episode_idx % 2 == 0:
+    #         if self.step_cnt <= 2:
+    #             return self.pick_this_object(0)
+    #         else:
+    #             return self.pick_this_object(2)
+    #     else:
+    #         if self.step_cnt <= 5:
+    #             # pre-pick
+    #             return self.pick_this_object(1)
+    #         elif self.step_cnt <= 10:
+    #             # actual pick
+    #             return self.pick_this_object(3)
+    #         elif self.step_cnt <= 12:
+    #             # pre-pick
+    #             return self.pick_this_object(0)
+    #         else:
+    #             # actual pick
+    #             return self.pick_this_object(2)
+
     def query_expert(self, episode_idx):
         """_summary_
 
@@ -96,16 +124,10 @@ class BlockEnv(gym.Env):
                 return self.pick_this_object(2)
         else:
             if self.step_cnt <= 5:
-                # pre-pick
-                return self.pick_this_object(1)
-            elif self.step_cnt <= 10:
-                # actual pick
                 return self.pick_this_object(3)
-            elif self.step_cnt <= 12:
-                # pre-pick
-                return self.pick_this_object(0)
+            elif self.step_cnt <= 10:
+                return self.move_up()
             else:
-                # actual pick
                 return self.pick_this_object(2)
 
     def pick_this_object(self, obj_idx):
