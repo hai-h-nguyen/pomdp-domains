@@ -105,6 +105,12 @@ register(
 )
 
 register(
+    id='pdomains-block-pushing-v0',
+    entry_point='pdomains.block_pushing:BlockEnv',
+    max_episode_steps=50,
+)
+
+register(
     id='pdomains-block-stacking-v0',
     entry_point='pdomains.block_stacking:BlockEnv',
     max_episode_steps=50,
