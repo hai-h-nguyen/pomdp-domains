@@ -94,7 +94,7 @@ class DrawerEnv(gym.Env):
         else:
             if self.step_cnt <= 8:
                 return self.pull_locked_drawer()
-            elif self.step_cnt <= 9:
+            elif self.step_cnt <= 12:
                 self.signal_reset_target()
                 return self.move_up()
             else:
