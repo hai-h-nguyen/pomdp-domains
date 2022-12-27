@@ -67,18 +67,18 @@ class DrawerEnv(gym.Env):
 
         self.old_obs = None
 
-    def query_expert(self, episode_idx):
-        """pick the movable block"""
-        action = self.core_env.getNextAction(0)
-        action[1:4] /= self.xyz_range
+    # def query_expert(self, episode_idx):
+    #     """pick the movable block"""
+    #     action = self.core_env.getNextAction(0)
+    #     action[1:4] /= self.xyz_range
 
-        if self.action_dim == 5:
-            action[4] /= self.r_range
+    #     if self.action_dim == 5:
+    #         action[4] /= self.r_range
 
-        if self.env_config['robot'] == 'kuka':
-            action[0] = 2*action[0] - 1
+    #     if self.env_config['robot'] == 'kuka':
+    #         action[0] = 2*action[0] - 1
 
-        return action
+    #     return action
 
     def query_expert(self, episode_idx):
         """_summary_
@@ -94,7 +94,7 @@ class DrawerEnv(gym.Env):
         else:
             if self.step_cnt <= 8:
                 return self.pull_locked_drawer()
-            elif self.step_cnt <= 12:
+            elif self.step_cnt <= 10:
                 self.signal_reset_target()
                 return self.move_up()
             else:
