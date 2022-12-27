@@ -175,14 +175,13 @@ class BlockEnv(gym.Env):
 
         return (math.sqrt(2) * torch.lerp(torch.lerp(n00, n10, t[..., 0]), torch.lerp(n01, n11, t[..., 0]), t[..., 1]))
 
-    def _process_obs(self, state, obs, reward):
+    def _process_obs(self, state, obs):
         if self.include_noise:
             obs[0] += 0.007*self.rand_perlin_2d((self.image_size, self.image_size), (
                 (np.random.choice([1, 2, 4, 6], 1)[0]),
                 int(np.random.choice([1, 2, 4, 6], 1)[0]))).numpy()
 
         state_tile = state*np.ones((1, obs.shape[1], obs.shape[2]))
-        # reward_tile = reward*np.ones((1, obs.shape[1], obs.shape[2]))
         stacked = np.concatenate([obs, state_tile], axis=0)
         return stacked
 
@@ -196,7 +195,7 @@ class BlockEnv(gym.Env):
             action[0] = 0.5 * (action[0] + 1)  # [-1, 1] to [0, 1] for p
         (state, _, obs), reward, done = self.core_env.step(action)
 
-        self.obs = self._process_obs(state, obs, reward)
+        self.obs = self._process_obs(state, obs)
 
         info = {}
 
@@ -216,7 +215,7 @@ class BlockEnv(gym.Env):
         self.target_obj_idx = 1 - self.target_obj_idx
         self.step_cnt = 0
         (state, _, obs) = self.core_env.reset(self.target_obj_idx, noise=self.include_noise)
-        self.obs = self._process_obs(state, obs, 0.0)
+        self.obs = self._process_obs(state, obs)
 
         # if self.old_obs is not None:
         #     diff = obs[0] - self.old_obs
