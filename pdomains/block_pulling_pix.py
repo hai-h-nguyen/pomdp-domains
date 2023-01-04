@@ -12,32 +12,31 @@ import math
 import torch
 
 class BlockEnv(gym.Env):
-    def __init__(self, seed=0, img_size=64, rendering=False, robot='kuka', action_sequence='pxyzr', noise=False):
+    def __init__(self, seed=0, img_size=84, rendering=False, robot='kuka', action_sequence='pxyzr', noise=False):
 
         workspace = np.asarray([[0.3, 0.7],
                                 [-0.2, 0.2],
                                 [0.01, 0.25]])
 
         self.image_size = img_size
-
         # in RAD envs, image_size is greater than true_image_size
-        self.true_image_size = 64
+        self.true_image_size = 84
 
         self.env_config = {'workspace': workspace, 'max_steps': 100, 'obs_size': self.image_size, 'render': False, 'fast_mode': True,
-                        'seed': seed, 'action_sequence': action_sequence, 'num_objects': 1, 'random_orientation': True,
+                        'seed': seed, 'action_sequence': action_sequence, 'num_objects': 1, 'random_orientation': False,
                         'reward_type': 'sparse', 'simulate_grasp': True, 'perfect_grasp': False, 'robot': robot,
                         'workspace_check': 'point', 'physics_mode': 'fast', 'hard_reset_freq': 1000, 'view_scale': 1.0,
                         'object_scale_range': (1, 1), 'obs_type': 'pixel',
                         'view_type': 'camera_center_xyz'}
 
-        self.planner_config = {'random_orientation': True, 'dpos': 0.05, 'drot': np.pi/8}
+        self.planner_config = {'random_orientation': False, 'dpos': 0.05, 'drot': np.pi/8}
 
         self.xyz_range = self.planner_config['dpos']
         self.r_range = self.planner_config['drot']
         
         self.env_config['render'] = rendering
         self.seed(seed)
-        self.core_env = env_factory.createSingleProcessEnv('close_loop_pomdp_block_picking',
+        self.core_env = env_factory.createSingleProcessEnv('close_loop_pomdp_block_pulling',
                                                             self.env_config,
                                                             self.planner_config)
 
@@ -66,6 +65,8 @@ class BlockEnv(gym.Env):
 
         self.step_cnt = 0
 
+        self.old_obs = None
+
     def query_expert(self, episode_idx):
         """_summary_
 
@@ -75,19 +76,23 @@ class BlockEnv(gym.Env):
         Returns:
             _type_: expert action
         """
-        if episode_idx % 2 == 0:
-            return self.pick_movable()
+        if episode_idx % 2 == 1:
+            return self.pull_movable()
         else:
             if self.step_cnt <= 10:
-                return self.pick_immovable()
-            elif self.step_cnt <= 15:
+                return self.pull_immovable()
+            elif self.step_cnt <= 12:
+                self.signal_reset_target()
                 return self.move_up()
             else:
-                return self.pick_movable()
+                return self.pull_movable()
 
-    def pick_movable(self):
-        """pick the movable block"""
-        action = self.core_env.getNextAction(self.target_obj_idx)
+    def signal_reset_target(self):
+        self.core_env.getNextAction(2)
+
+    def pull_movable(self):
+        """pull the movable block"""
+        action = self.core_env.getNextAction(1)
         action[1:4] /= self.xyz_range
 
         if self.action_dim == 5:
@@ -98,9 +103,9 @@ class BlockEnv(gym.Env):
 
         return action
 
-    def pick_immovable(self):
-        """pick the immovable block"""
-        action = self.core_env.getNextAction(1 - self.target_obj_idx)
+    def pull_immovable(self):
+        """pull the immovable block"""
+        action = self.core_env.getNextAction(0)
         action[1:4] /= self.xyz_range
 
         if self.action_dim == 5:
@@ -110,6 +115,19 @@ class BlockEnv(gym.Env):
             action[0] = 2*action[0] - 1
 
         return action
+
+    # def query_expert(self):
+    #     """pick the movable block"""
+    #     action = self.core_env.getNextAction(0)
+    #     action[1:4] /= self.xyz_range
+
+    #     if self.action_dim == 5:
+    #         action[4] /= self.r_range
+
+    #     if self.env_config['robot'] == 'kuka':
+    #         action[0] = 2*action[0] - 1
+
+    #     return action
 
     def move_up(self):
         """pick the immovable block"""
@@ -159,7 +177,7 @@ class BlockEnv(gym.Env):
 
     def _process_obs(self, state, obs):
         if self.include_noise:
-            obs += 0.007*self.rand_perlin_2d((self.image_size, self.image_size), (
+            obs[0] += 0.007*self.rand_perlin_2d((self.image_size, self.image_size), (
                 (np.random.choice([1, 2, 4, 6], 1)[0]),
                 int(np.random.choice([1, 2, 4, 6], 1)[0]))).numpy()
 
@@ -200,6 +218,12 @@ class BlockEnv(gym.Env):
         self.step_cnt = 0
         (state, _, obs) = self.core_env.reset(self.target_obj_idx, noise=self.include_noise)
         self.obs = self._process_obs(state, obs)
+
+        # if self.old_obs is not None:
+        #     diff = obs[0] - self.old_obs
+        #     print(np.min(diff), np.max(diff), np.mean(diff))
+
+        # self.old_obs = obs
 
         return self.obs
 
