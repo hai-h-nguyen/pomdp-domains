@@ -117,6 +117,12 @@ register(
 )
 
 register(
+    id='pdomains-block-pushing-pixel-v0',
+    entry_point='pdomains.block_pushing_pix:BlockEnv',
+    max_episode_steps=50,
+)
+
+register(
     id='pdomains-block-stacking-v0',
     entry_point='pdomains.block_stacking:BlockEnv',
     max_episode_steps=50,
@@ -125,6 +131,12 @@ register(
 register(
     id='pdomains-drawer-opening-v0',
     entry_point='pdomains.drawer_opening:DrawerEnv',
+    max_episode_steps=50,
+)
+
+register(
+    id='pdomains-drawer-opening-pixel-v0',
+    entry_point='pdomains.drawer_opening_pix:BlockEnv',
     max_episode_steps=50,
 )
 
