@@ -136,7 +136,7 @@ register(
 
 register(
     id='pdomains-drawer-opening-pixel-v0',
-    entry_point='pdomains.drawer_opening_pix:BlockEnv',
+    entry_point='pdomains.drawer_opening_pix:DrawerEnv',
     max_episode_steps=50,
 )
 
