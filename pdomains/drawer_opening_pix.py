@@ -202,9 +202,6 @@ class DrawerEnv(gym.Env):
 
         info["success"] = done and (reward > 0)
 
-        reward += -self.core_env.getEnvPenalty()
-        reward = round(reward, 3)
-
         self.step_cnt += 1
 
         if self.show:
