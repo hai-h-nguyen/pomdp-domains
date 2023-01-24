@@ -5,7 +5,7 @@ from getkey import getkey, keys
 import numpy as np
 
 
-env=gym.make('pdomains-car-flag-symm-2d-p2-v0', rendering=True)
+env=gym.make('pdomains-car-flag-symm-2d-dreamer-v1', rendering=True)
 obs = env.reset()
 print(obs)
 
