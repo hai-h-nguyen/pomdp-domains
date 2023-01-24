@@ -291,7 +291,7 @@ class CarEnv(gym.Env):
         # plt.imshow(whole_obs[1])
         # plt.show()
 
-        return obs.reshape((64, 64, 3))
+        return whole_obs.reshape((64, 64, 3))
 
 
     def _state_to_xy(self, state):
