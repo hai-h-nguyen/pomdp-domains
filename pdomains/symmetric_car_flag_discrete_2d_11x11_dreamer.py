@@ -283,11 +283,11 @@ class CarEnv(gym.Env):
         whole_obs[0, start:stop, start:stop] = obs[0, :, :]
         whole_obs[1, start:stop, start:stop] = obs[1, :, :]
 
-        plt.subplot(2, 1, 1)
-        plt.imshow(whole_obs[0])
-        plt.subplot(2, 1, 2)
-        plt.imshow(whole_obs[1])
-        plt.show()
+        # plt.subplot(2, 1, 1)
+        # plt.imshow(whole_obs[0])
+        # plt.subplot(2, 1, 2)
+        # plt.imshow(whole_obs[1])
+        # plt.show()
 
         return whole_obs.reshape((64, 64, 3))
 
