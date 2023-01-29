@@ -158,10 +158,21 @@ class BlockEnv(gym.Env):
         return (math.sqrt(2) * torch.lerp(torch.lerp(n00, n10, t[..., 0]), torch.lerp(n01, n11, t[..., 0]), t[..., 1]))
 
     def _process_obs(self, state, obs):
+        # plt.imshow(obs[0])
+        # plt.clim(0, 0.3)
+        # plt.colorbar()
+        # plt.savefig('before_noise.png', bbox_inches='tight')
+        # plt.close()
         if self.include_noise:
             obs[0] += 0.007*self.rand_perlin_2d((self.image_size, self.image_size), (
                 (np.random.choice([1, 2, 4, 6], 1)[0]),
                 int(np.random.choice([1, 2, 4, 6], 1)[0]))).numpy()
+        # plt.imshow(obs[0])
+        # plt.clim(0, 0.3)
+        # plt.colorbar()
+        # plt.savefig('after_noise.png', bbox_inches='tight')
+        # plt.close()
+        # breakpoint()
         state_tile = state*np.ones((1, obs.shape[1], obs.shape[2]))
         stacked = np.concatenate([obs, state_tile], axis=0)
         return stacked
