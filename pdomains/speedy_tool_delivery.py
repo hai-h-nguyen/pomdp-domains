@@ -179,6 +179,8 @@ class SpeedyToolDeliveryEnv(gym.Env):
         return done
 
     def step(self, action):
+        if isinstance(action, np.ndarray):
+            action = action[0]
         s = self.core_env.get_state()
         next_obs, _, _, _ = self.core_env.step([action])
         next_s = self.core_env.get_state()
@@ -199,7 +201,7 @@ class SpeedyToolDeliveryEnv(gym.Env):
 
 if __name__ == "__main__":
     env = SpeedyToolDeliveryEnv(human_speeds=[10, 20])
-    env.reset()
+    obs = env.reset()
 
     print(env.step(0)[1])
     print(env.step(0)[1])
