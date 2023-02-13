@@ -24,8 +24,9 @@ class SpeedyToolDeliveryEnv(gym.Env):
         # discrete room locations: [3]
         # which object in the basket: [3]*n_objs
         # which object are on the table: [2]*n_objs (only observable in the tool-room)
-        # human 0 working step: [n_objs + 1] (only observable in the work-room)
-        # human 1 working step: [n_objs + 1] (only observable in the work-room)
+        # human 0 working step: [n_human_steps] (only observable in the work-room)
+        # human 1 working step: [n_human_steps] (only observable in the work-room)
+        # it is really one-hot encoded
         self.observation_space = spaces.MultiBinary(3 + 3*self.n_objs + self.n_objs +
                                                     self.n_human_steps + self.n_human_steps)
 
@@ -102,15 +103,14 @@ class SpeedyToolDeliveryEnv(gym.Env):
         # discrete room locations: [3]
         # which object in the basket: [3]*n_objs
         # which object are on the table: [2]*n_objs
-        # human 0 working step: [n_objs + 1]
-        # human 1 working step: [n_objs + 1]
-        # human 0 is working or not [2]
-        # human 1 is working or not [2]
-        assert len(state) == (2 + 1 + 1 + 2*self.n_objs + 2 + 2)
+        # which object is waited for - human 0: [n_objs]
+        # which object is waited for - human 1: [n_objs]
+        assert len(state) == (2*self.n_objs + 6), f"Len state {len(state)} is wrong"
 
         delta_time = new_state[self.timestep_idx] - state[self.timestep_idx]
         reward = -delta_time
 
+        # faster human waiting incurs more penalty
         if self.human_speeds[0] < self.human_speeds[1]:
             human0_wait_penalty = -30
             human1_wait_penalty = -10
@@ -118,29 +118,32 @@ class SpeedyToolDeliveryEnv(gym.Env):
             human0_wait_penalty = -10
             human1_wait_penalty = -30
 
+        objs_in_basket = state[4:4+self.n_objs]
+        next_objs_in_basket = new_state[4:4+self.n_objs]
+
         # human 0
-        prev_human0_stage = state[-4]
-        new_human0_stage = new_state[-4]
-        human0_waiting = state[-2]
+        curr_human0_needed_obj = int(state[-2])
+
+        deliver_success = (action == self.n_objs) and \
+                          (sum(next_objs_in_basket) < sum(objs_in_basket))
 
         # Deliver a good tool for human 0
-        if prev_human0_stage + 1 == new_human0_stage and action == self.n_objs:
+        if objs_in_basket[curr_human0_needed_obj] > 0 and deliver_success:
             reward += 100
-
-        if human0_waiting:
+        else:
             reward += human0_wait_penalty
 
         # human 1
-        prev_human1_stage = state[-3]
-        new_human1_stage = new_state[-3]
-        human1_waiting = state[-1]
+        curr_human1_needed_obj = int(state[-1])
 
-        if human1_waiting:
-            reward += human1_wait_penalty
+        deliver_success = (action == self.n_objs + 1) and \
+                          (sum(next_objs_in_basket) < sum(objs_in_basket))
 
         # Deliver a good tool for human 1
-        if prev_human1_stage + 1 == new_human1_stage and action == self.n_objs + 1:
+        if objs_in_basket[curr_human1_needed_obj] > 0 and deliver_success:
             reward += 100
+        else:
+            reward += human1_wait_penalty
 
         return reward
 
@@ -161,16 +164,16 @@ class SpeedyToolDeliveryEnv(gym.Env):
         # discrete room locations: [3]
         # which object in the basket: [3]*n_objs
         # which object are on the table: [2]*n_objs
-        # human 0 working step: [n_objs + 1]
-        # human 1 working step: [n_objs + 1]
-        # human 0 is waiting or not [2]
-        # human 1 is waiting or not [2]
+        # which object is waited for - human 0: [n_objs]
+        # which object is waited for - human 1: [n_objs]
 
         done = False
-        human_stage_0 = new_state[-4]
-        human_stage_1 = new_state[-3]
 
-        if human_stage_0 >= self.n_objs and human_stage_1 >= self.n_objs:
+        objs_in_basket = new_state[4:4+self.n_objs]
+        objs_in_table = new_state[4+self.n_objs:4+2*self.n_objs]
+
+        # the basket is empty and all objects are not on the table
+        if sum(objs_in_basket) == 0 and sum(objs_in_table) == self.n_objs:
             done = True
 
         return done

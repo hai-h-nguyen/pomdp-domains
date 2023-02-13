@@ -23,7 +23,7 @@ class OrderedToolDeliveryEnv(gym.Env):
         # discrete room locations: [2]
         # which object in the basket: [2]*n_objs
         # which object are on the table: [2]*n_objs (only observable in the tool-room)
-        # human working step: [n_objs + 1] (only observable in the work-room)
+        # human working step: [n_human_steps] (only observable in the work-room)
         self.observation_space = spaces.MultiBinary(1 + 2*self.n_objs + self.n_human_steps)
 
         self.seed()
