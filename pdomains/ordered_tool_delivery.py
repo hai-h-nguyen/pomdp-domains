@@ -10,7 +10,7 @@ from general_bayes_adaptive_pomdps.domains.ordered_tool_delivery.macro_factored_
 class OrderedToolDeliveryEnv(gym.Env):
     def __init__(self, rendering=False):
 
-        self.core_env = EnvToolDelivery([0, 1, 2], render=rendering)
+        self.core_env = EnvToolDelivery([0, 1, 2], 0.85, render=rendering)
 
         self.action_space = spaces.Discrete(4)
 
@@ -22,9 +22,8 @@ class OrderedToolDeliveryEnv(gym.Env):
         # OBSERVATION
         # discrete room locations: [2]
         # which object in the basket: [2]*n_objs
-        # which object are on the table: [2]*n_objs (only observable in the tool-room)
         # human working step: [n_human_steps] (only observable in the work-room)
-        self.observation_space = spaces.MultiBinary(1 + 2*self.n_objs + self.n_human_steps)
+        self.observation_space = spaces.MultiBinary(1 + self.n_objs + self.n_human_steps)
 
         self.seed()
 
@@ -66,9 +65,8 @@ class OrderedToolDeliveryEnv(gym.Env):
         # current primitive timestep
         # discrete room locations: [2]
         # which object in the basket: [2]*n_objs
-        # which object are on the table: [2]*n_objs
         # human working step: [n_objs + 1]
-        assert len(state) == (2 + 1 + 2*self.n_objs + 2)
+        assert len(state) == (2 + 1 + self.n_objs + 2)
 
         delta_time = new_state[self.timestep_idx] - state[self.timestep_idx]
         reward = -delta_time
@@ -96,7 +94,6 @@ class OrderedToolDeliveryEnv(gym.Env):
         # current primitive timestep
         # discrete room locations: [2]
         # which object in the basket: [2]*n_objs
-        # which object are on the table: [2]*n_objs
         # human working step: [n_objs + 1]
 
         done = False
