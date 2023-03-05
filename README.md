@@ -1,8 +1,7 @@
-This is the repo that store several pomdp domains that I use for my research.
+This is the repo that store domains used in [Leveraging Fully Observable Policies for Learning under Partial Observability](https://openreview.net/pdf?id=pn-HOPBioUE) accepted at CoRL 2022. See descriptions of these domains in the paper.
 
 ### Setup
 - Install `pip3 install -e .`
-- You will need MuJoCo to run for all domains except for Car-Flag
 - You will need to install https://github.com/hai-h-nguyen/pomdp_robot_domains to run Block-Picking
 
 ### Domains
@@ -12,22 +11,22 @@ This is the repo that store several pomdp domains that I use for my research.
   <img src="./images/car-flag.png" height="200" />
 </p>
 
-- Ant-Tag: An ant must move close enough to an opponent which tends to move away from the ant. The ant does not usually observe the opponent's position except when the opponent is within the blue sphere.
+- Bumps-1D
 
 <p align="center">
-  <img src="./images/ant-tag.png" height="200" />
+  <img src="images/bumps_1d.png" height="200" />
 </p>
 
-- Two-Boxes: Using the history of angles and positions, the finger must check the sizes of two boxes to see if they are equal. If yes, it goes to the right to finish the task, else go to the left.
+- Bumps-2D
 
 <p align="center">
-  <img src="./images/two-boxes.png" height="200" />
+  <img src="images/bumps_2d.png" height="200" />
 </p>
 
-- Ant-Heaven-Hell: Similar to Car-Flag but in 2D, the ant must go to the green area whose side are given when it is within the blue sphere. It is given a penalty when it goes to the red area.
+- LunarLander-P or -V
 
 <p align="center">
-  <img src="./images/ant-hh.png" height="200" />
+  <img src="images/lunarlander.png" height="200" />
 </p>
 
 - Block-Picking: The agent has to pick on block up from two blocks using colorless depth images. Only one block is pickable and the agent does not know which one. In the current version of the domain, the positions of the blocks are fixed but they switch their positions randomly. To test the domain, run tests/test_block_picking.py. This script will run an expert which know exactly which block to pick.
@@ -36,17 +35,18 @@ This is the repo that store several pomdp domains that I use for my research.
   <img src="./images/block_picking.png" height="200" />
 </p>
 
+### Test experts
+- Run the files in the tests folder
+
 ### Cite
 If you use this repo in your published work, please cite as
 
 
 ```
-@misc{nguyen2021penvs,
-  author={Hai, Nguyen},
-  title={Pomdp Robot Domains},
-  year={2021},
-  publisher={GitHub},
-  journal={GitHub repository},
-  howpublished={\url{https://github.com/hai-h-nguyen/pomdp-domains}},
+@article{nguyen2022leveraging,
+  title={Leveraging Fully Observable Policies for Learning under Partial Observability},
+  author={Nguyen, Hai and Baisero, Andrea and Wang, Dian and Amato, Christopher and Platt, Robert},
+  journal={arXiv preprint arXiv:2211.01991},
+  year={2022}
 }
 ```
