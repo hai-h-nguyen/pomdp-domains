@@ -8,6 +8,7 @@ from gym.utils import seeding
 from helping_hands_rl_envs import env_factory
 import matplotlib.pyplot as plt
 import time
+import matplotlib.patches as patches
 import math
 import torch
 
@@ -49,11 +50,13 @@ class BlockEnv(gym.Env):
         high_action = np.ones(self.action_dim)
         self.action_space = spaces.Box(-high_action, high_action)
 
-        low = np.zeros((2, self.true_image_size, self.true_image_size))
-        high = np.ones((2, self.true_image_size, self.true_image_size))
+        num_channels = 3
+
+        low = np.zeros((num_channels, self.true_image_size, self.true_image_size))
+        high = np.ones((num_channels, self.true_image_size, self.true_image_size))
         self.observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
 
-        self.img_size = (2, self.true_image_size, self.true_image_size)
+        self.img_size = (num_channels, self.true_image_size, self.true_image_size)
         self.image_space = gym.spaces.Box(
             shape=self.img_size, low=0, high=1.0, dtype=np.float32
         )
@@ -175,14 +178,43 @@ class BlockEnv(gym.Env):
 
         return (math.sqrt(2) * torch.lerp(torch.lerp(n00, n10, t[..., 0]), torch.lerp(n01, n11, t[..., 0]), t[..., 1]))
 
-    def _process_obs(self, state, obs):
+    # def _process_obs(self, state, obs):
+    #     if self.include_noise:
+    #         obs[0] += 0.007*self.rand_perlin_2d((self.image_size, self.image_size), (
+    #             (np.random.choice([1, 2, 4, 6], 1)[0]),
+    #             int(np.random.choice([1, 2, 4, 6], 1)[0]))).numpy()
+
+    #     state_tile = state*np.ones((1, obs.shape[1], obs.shape[2]))
+    #     stacked = np.concatenate([obs, state_tile], axis=0)
+    #     return stacked
+
+    def _process_obs(self, state, obs, seg_mask):
         if self.include_noise:
             obs[0] += 0.007*self.rand_perlin_2d((self.image_size, self.image_size), (
                 (np.random.choice([1, 2, 4, 6], 1)[0]),
                 int(np.random.choice([1, 2, 4, 6], 1)[0]))).numpy()
 
         state_tile = state*np.ones((1, obs.shape[1], obs.shape[2]))
-        stacked = np.concatenate([obs, state_tile], axis=0)
+
+        obj_ids = np.unique(seg_mask)
+
+        num_objs = len(obj_ids) - 1
+
+        # noisy object
+        if 1 in obj_ids:
+            num_objs -= 1
+
+        if -1 in obj_ids:
+            num_objs -= 1
+
+        # object 2 and 3 are the same type of object
+        # if 2 in obj_ids and 3 in obj_ids:
+            # num_objs -= 1
+
+        assert num_objs <= 2, obj_ids
+
+        objs_mask = num_objs*np.ones((1, obs.shape[1], obs.shape[2]))
+        stacked = np.concatenate([obs, state_tile, objs_mask], axis=0)
         return stacked
 
     def step(self, action):
@@ -193,9 +225,16 @@ class BlockEnv(gym.Env):
 
         if self.env_config['robot'] == 'kuka':
             action[0] = 0.5 * (action[0] + 1)  # [-1, 1] to [0, 1] for p
-        (state, _, obs), reward, done = self.core_env.step(action)
+        (state, seg_mask, obs), reward, done = self.core_env.step(action)
 
-        self.obs = self._process_obs(state, obs)
+        # boxes = self.compute_boxes(seg_mask)
+
+        # self.show_seg(obs[0], boxes)
+
+        # plt.imshow(seg_mask)
+        # plt.show()
+
+        self.obs = self._process_obs(state, obs, seg_mask)
 
         info = {}
 
@@ -214,8 +253,12 @@ class BlockEnv(gym.Env):
     def reset(self):
         self.target_obj_idx = 1 - self.target_obj_idx
         self.step_cnt = 0
-        (state, _, obs) = self.core_env.reset(self.target_obj_idx, noise=self.include_noise)
-        self.obs = self._process_obs(state, obs)
+        (state, seg_mask, obs) = self.core_env.reset(self.target_obj_idx, noise=self.include_noise)
+        self.obs = self._process_obs(state, obs, seg_mask)
+
+        # boxes = self.compute_boxes(seg_mask)
+
+        # self.show_seg(obs[0], boxes)
 
         # if self.old_obs is not None:
         #     diff = obs[0] - self.old_obs
@@ -227,3 +270,75 @@ class BlockEnv(gym.Env):
 
     def close(self):
         self.core_env.close()
+
+    def masks_to_boxes(self, masks: np.array) -> np.array:
+        """
+        Compute the bounding boxes around the provided masks.
+
+        Returns a [N, 4] tensor containing bounding boxes. The boxes are in ``(x1, y1, x2, y2)`` format with
+        ``0 <= x1 < x2`` and ``0 <= y1 < y2``.
+
+        Args:
+            masks (Array[N, H, W]): masks to transform where N is the number of masks
+                and (H, W) are the spatial dimensions.
+
+        Returns:
+            Array[N, 4]: bounding boxes
+        """
+        n = masks.shape[0]
+
+        bounding_boxes = np.zeros((n, 4))
+
+        for index, mask in enumerate(masks):
+            y, x = np.where(mask != 0)
+
+            bounding_boxes[index, 0] = np.min(x)
+            bounding_boxes[index, 1] = np.min(y)
+            bounding_boxes[index, 2] = np.max(x)
+            bounding_boxes[index, 3] = np.max(y)
+
+        return bounding_boxes
+
+    def show_seg(self, obs, boxes):
+        fig, ax = plt.subplots(1)
+
+        ax.imshow(obs)
+
+        for i, bbox in enumerate(boxes):
+            width = bbox[2] - bbox[0]
+            height = bbox[3] - bbox[1]
+            rect = patches.Rectangle((bbox[0], bbox[1]), width, height, linewidth=1,
+                                    edgecolor='r', facecolor='none')
+
+            ax.add_patch(rect)
+
+        plt.show()
+
+    def compute_boxes(self, obs):
+        obj_ids = np.unique(obs)
+
+        obj_ids = obj_ids[1:]
+
+        ids = []
+        if 2 in obj_ids:
+            ids.append(2)
+
+        if 3 in obj_ids:
+            ids.append(3)
+
+        obj_ids = np.array(ids)
+
+        # remove background and noise
+
+        # print(obj_ids)
+        # np.delete(obj_ids, [1])
+
+        # print(obj_ids)
+
+        # print("----------")
+
+        masks = obs == obj_ids[:, None, None]
+
+        boxes = self.masks_to_boxes(masks)
+
+        return boxes
