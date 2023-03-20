@@ -198,20 +198,21 @@ class BlockEnv(gym.Env):
 
         obj_ids = np.unique(seg_mask)
 
-        num_objs = len(obj_ids) - 1
+        num_objs = 0
 
         # noisy object
-        if 1 in obj_ids:
-            num_objs -= 1
+        if 2 in obj_ids:
+            num_objs += 1
 
-        if -1 in obj_ids:
-            num_objs -= 1
+        if 3 in obj_ids:
+            num_objs += 1
 
         # object 2 and 3 are the same type of object
         # if 2 in obj_ids and 3 in obj_ids:
             # num_objs -= 1
 
         assert num_objs <= 2, obj_ids
+        assert num_objs >= 0, obj_ids
 
         objs_mask = num_objs*np.ones((1, obs.shape[1], obs.shape[2]))
         stacked = np.concatenate([obs, state_tile, objs_mask], axis=0)
