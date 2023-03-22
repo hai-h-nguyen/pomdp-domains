@@ -50,7 +50,7 @@ class BlockEnv(gym.Env):
         high_action = np.ones(self.action_dim)
         self.action_space = spaces.Box(-high_action, high_action)
 
-        num_channels = 3
+        num_channels = 4
 
         low = np.zeros((num_channels, self.true_image_size, self.true_image_size))
         high = np.ones((num_channels, self.true_image_size, self.true_image_size))
@@ -229,7 +229,7 @@ class BlockEnv(gym.Env):
         # assert 0 <= num_objs <= 2, obj_ids
 
         # objs_mask = num_objs*np.ones((1, obs.shape[1], obs.shape[2]))
-        stacked = np.concatenate([obs, state_tile, seg_mask], axis=0)
+        stacked = np.concatenate([obs, state_tile, seg_mask, state_tile], axis=0)
         return stacked
 
     def step(self, action):
