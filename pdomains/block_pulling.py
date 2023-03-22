@@ -198,24 +198,38 @@ class BlockEnv(gym.Env):
 
         obj_ids = np.unique(seg_mask)
 
-        num_objs = 0
+        for idx in obj_ids:
+            # ignore irrelevant objects
+            if idx not in [0, 2, 3]:
+                seg_mask[seg_mask == idx] = 0
 
-        # noisy object
-        if 2 in obj_ids:
-            num_objs += 1
+            # object 2 and 3 are the same type of object
+            if idx in [2, 3]:
+                seg_mask[seg_mask == idx] = 1
 
-        if 3 in obj_ids:
-            num_objs += 1
+        # plt.imshow(seg_mask)
+        # plt.show()
+
+        seg_mask = seg_mask[None, :, :]
+
+        # obj_ids = np.unique(seg_mask)
+
+        # num_objs = 0
+
+        # if 2 in obj_ids:
+            # num_objs += 1
+
+        # if 3 in obj_ids:
+            # num_objs += 1
 
         # object 2 and 3 are the same type of object
         # if 2 in obj_ids and 3 in obj_ids:
             # num_objs -= 1
 
-        assert num_objs <= 2, obj_ids
-        assert num_objs >= 0, obj_ids
+        # assert 0 <= num_objs <= 2, obj_ids
 
-        objs_mask = num_objs*np.ones((1, obs.shape[1], obs.shape[2]))
-        stacked = np.concatenate([obs, state_tile, objs_mask], axis=0)
+        # objs_mask = num_objs*np.ones((1, obs.shape[1], obs.shape[2]))
+        stacked = np.concatenate([obs, state_tile, seg_mask], axis=0)
         return stacked
 
     def step(self, action):
