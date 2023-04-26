@@ -14,7 +14,7 @@ register(
 
 register(
     id='pdomains-car-flag-symm-v0',
-    entry_point='pdomains.symmetric_car_flag_discrete:CarEnv',
+    entry_point='pdomains.symmetric_car_flag_discrete_1d_20:CarEnv',
     max_episode_steps=50,
 )
 
@@ -156,6 +156,12 @@ register(
 register(
     id='pdomains-heaven-hell-v1',
     entry_point='pdomains.heaven_hell_new:HeavenHellEnv',
+    max_episode_steps=50,
+)
+
+register(
+    id='pdomains-heaven-hell-v2',
+    entry_point='pdomains.heaven_hell_new_mdp:HeavenHellEnv',
     max_episode_steps=50,
 )
 

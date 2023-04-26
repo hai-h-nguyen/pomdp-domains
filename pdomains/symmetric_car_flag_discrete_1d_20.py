@@ -4,33 +4,33 @@ import numpy as np
 import gym
 from gym import spaces
 from gym.utils import seeding
-from gym.envs.classic_control import rendering as visualize
+import socket
+if socket.gethostname() not in ['theseus', 'titan']:  # will cause errors for remote computers
+    from gym.envs.classic_control import rendering as visualize
 import random
+import time
 
 STEP_PENALTY = -0.01
 FOUND_HEAVEN_REWARD = 1.0
 FOUND_HELL_REWARD = -1.0
 
 class CarEnv(gym.Env):
-    def __init__(self, seed=0, rendering=False):
-        self.max_position = 1.2
+    def __init__(self, seed=0, priest_pos=0.0, rendering=False):
+        self.max_position = 4.2
         self.min_position = -self.max_position
 
         self.setup_view = False
 
-        self.heaven_position = 1.0
-        self.hell_position = -1.0
-        self.priest_position = 0.0
-
         self.delta = 0.2
-
-        self.low_state = np.array([self.min_position, -1.0])
-        self.high_state = np.array([self.max_position, 1.0])
+        self.heaven_hell_position = self.max_position - self.delta
+        self.heaven_position = self.heaven_hell_position
+        self.hell_position = -self.heaven_hell_position
+        self.priest_position = priest_pos*self.delta
 
         self.viewer = None
         self.show = rendering
 
-        self.screen_width = 600
+        self.screen_width = 1600
         self.screen_height = 400
 
         self.low_state = np.array(
@@ -55,6 +55,7 @@ class CarEnv(gym.Env):
 
         self.steps_taken = 0
         self.reached_heaven = False
+        self.discount = 0.9
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -74,9 +75,6 @@ class CarEnv(gym.Env):
             position += -self.delta
         if (position >= self.max_position): position = self.max_position
         if (position <= self.min_position): position = self.min_position
-
-        max_position = max(self.heaven_position, self.hell_position)
-        min_position = min(self.heaven_position, self.hell_position)
 
         env_reward = STEP_PENALTY
 
@@ -100,11 +98,12 @@ class CarEnv(gym.Env):
             else:
                 # Heaven on the left
                 direction = -1.0
-            
+
         self.state = np.array([position, direction])
 
         if self.show:
             self.render()
+            time.sleep(0.1)
 
         info = {}
         info["success"] = self.reached_heaven
@@ -113,7 +112,9 @@ class CarEnv(gym.Env):
             env_reward != STEP_PENALTY
         )
 
-        return self.state, env_reward, done, info
+        obs = np.array([position/self.max_position, direction])
+
+        return obs, env_reward, done, info
 
     def render(self, mode='human'):
         self._setup_view()
@@ -132,31 +133,34 @@ class CarEnv(gym.Env):
 
         # Randomize the heaven/hell location
         if self.np_random.randint(2) == 0:
-            self.heaven_position = 1.0
+            self.heaven_position = self.heaven_hell_position
         else:
-            self.heaven_position = -1.0
+            self.heaven_position = -self.heaven_hell_position
 
         self.hell_position = -self.heaven_position
 
         # reduce the range to make sure the episode length is at least 2
-        pos_idices = [1, 2, 3, -1, -2, -3]
-        pos = random.choice(pos_idices)*self.delta
+        pos_indices = [1, 2, 3, 4, 5, 6, 7, 8, -1, -2, -3, -4, -5, -6, -7, -8]
+        max_indices = self.max_position // self.delta
+        pos_indices = list(np.arange(3 - max_indices, 0)) + list(np.arange(0, max_indices - 2))
+        pos = random.choice(pos_indices)*self.delta
         self.state = np.array([pos, 0.0])
 
         if self.viewer is not None:
             self._draw_flags()
             self.render()
 
-        return np.array(self.state)
+        return np.array(self.state/self.max_position)
 
     def _height(self, xs):
         return .55 * np.ones_like(xs)
 
     def _draw_flags(self):
         scale = self.scale
-        # Flag Heaven
-        flagx = (abs(self.heaven_position)-self.min_position)*scale
-        flagy1 = self._height(self.heaven_position)*scale
+
+        # First flag
+        flagx = (self.heaven_hell_position-self.min_position)*scale
+        flagy1 = self._height(self.heaven_hell_position)*scale
         flagy2 = flagy1 + 50
         flagpole = visualize.Line((flagx, flagy1), (flagx, flagy2))
         self.viewer.add_geom(flagpole)
@@ -172,9 +176,9 @@ class CarEnv(gym.Env):
 
         self.viewer.add_geom(flag)
 
-        # Flag Hell
-        flagx = (-abs(self.heaven_position)-self.min_position)*scale
-        flagy1 = self._height(self.hell_position)*scale
+        # Second flag
+        flagx = (-self.heaven_hell_position-self.min_position)*scale
+        flagy1 = self._height(self.heaven_hell_position)*scale
         flagy2 = flagy1 + 50
         flagpole = visualize.Line((flagx, flagy1), (flagx, flagy2))
         self.viewer.add_geom(flagpole)
@@ -190,7 +194,7 @@ class CarEnv(gym.Env):
 
         self.viewer.add_geom(flag)
 
-        # BLUE for priest
+        # BLUE flag for priest
         flagx = (self.priest_position-self.min_position)*scale
         flagy1 = self._height(self.priest_position)*scale
         flagy2 = flagy1 + 50
@@ -199,6 +203,8 @@ class CarEnv(gym.Env):
         flag = visualize.FilledPolygon(
             [(flagx, flagy2), (flagx, flagy2 - 10), (flagx + 25, flagy2 - 5)]
         )
+
+        # fixed color
         flag.set_color(0.0, 0.0, 1.0)
         self.viewer.add_geom(flag)
 
