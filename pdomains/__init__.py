@@ -152,3 +152,8 @@ register(
     max_episode_steps=50,
 )
 
+register(
+    id='pdomains-drawer-opening-hard-v0',
+    entry_point='pdomains.drawer_opening_hard:DrawerEnv',
+    max_episode_steps=60,
+)
