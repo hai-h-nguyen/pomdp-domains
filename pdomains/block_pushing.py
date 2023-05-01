@@ -197,7 +197,7 @@ class BlockEnv(gym.Env):
 
         self.obs = self._process_obs(state, obs)
 
-        reward += -0.1*self.core_env.getEnvPenalty()
+        # reward += -0.1*self.core_env.getEnvPenalty()
 
         info = {}
 
