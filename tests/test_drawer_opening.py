@@ -4,7 +4,7 @@ import gym
 import matplotlib
 matplotlib.use('Agg')
 
-env=gym.make('pdomains-drawer-opening-v0', rendering=True)
+env=gym.make('pdomains-drawer-opening-hard-v0', rendering=True)
 obs = env.reset()
 
 # plt.imshow(obs[0])
@@ -18,7 +18,7 @@ ep_idx = 0
 success_ep_idx = 0
 ret = 0
 
-while ep_idx <= 100:
+while ep_idx <= 10:
     # action = env.action_space.sample()
     action = env.query_expert(ep_idx)
     obs, reward, done, info = env.step(action)
@@ -28,7 +28,7 @@ while ep_idx <= 100:
         if info["success"]:
             success_ep_idx += 1
         # print(cnt, success_ep_idx, ep_idx)
-        print(f"ret: {ret:.2f}")
+        print(f"ret: {ret:.2f} {cnt}")
         ret = 0
         ep_idx += 1
         cnt = 0
