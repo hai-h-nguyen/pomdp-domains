@@ -152,3 +152,8 @@ register(
     max_episode_steps=50,
 )
 
+register(
+    id='pdomains-peg-insertion-v0',
+    entry_point='pdomains.peg_insertion:PegInsertionEnv',
+    max_episode_steps=50,
+)
