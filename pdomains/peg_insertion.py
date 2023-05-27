@@ -59,11 +59,11 @@ class PegInsertionEnv(gym.Env):
         pass
 
     def seed(self, seed=0):
-        self.env_config['seed'] = seed
         self.np_random, seed_ = seeding.np_random(seed)
         return seed_
 
     def _process_obs(self, obs):
+        obs = np.concatenate((obs["forces"], obs["torques"], obs["robot0_eef_pos"]))
         return obs
 
     def step(self, action):
@@ -78,12 +78,12 @@ class PegInsertionEnv(gym.Env):
     def reset(self):
         self.core_env.reset()
 
-        action = self.np_random.random.uniform(-1, 1, size=6)
-        action = action.insert(action, len(action), -1)
+        action = self.np_random.uniform(-1, 1, size=6)
+        action = np.insert(action, len(action), -1)
 
         obs, _, _, _ = self.core_env.step(action)
 
-        return obs
+        return self._process_obs(obs)
 
     def close(self):
         pass
