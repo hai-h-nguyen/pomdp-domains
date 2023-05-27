@@ -37,7 +37,7 @@ class PegInsertionEnv(gym.Env):
         )
 
         # Wrap this environment in a visualization wrapper
-        self.core_env = VisualizationWrapper(env, indicator_configs=None)        
+        self.core_env = VisualizationWrapper(env, indicator_configs=None)
 
         high_action = np.ones(6)
         self.action_space = spaces.Box(-high_action, high_action)
@@ -45,6 +45,8 @@ class PegInsertionEnv(gym.Env):
         self.observation_space = gym.spaces.Box(
             shape=(9,), low=-np.inf, high=np.inf, dtype=np.float32
         )
+
+        self.seed(seed=seed)
 
     def query_expert(self):
         """_summary_
@@ -76,17 +78,10 @@ class PegInsertionEnv(gym.Env):
     def reset(self):
         self.core_env.reset()
 
-        random_action = np.random.uniform(-1, 1, size=6)
-        random_action = np.insert(random_action, len(random_action), -1)
+        action = self.np_random.random.uniform(-1, 1, size=6)
+        action = action.insert(action, len(action), -1)
 
-        # no random action on z axis
-        random_action[2] = 0.0
-
-        # no random action on \phi and \theta axis
-        random_action[3] = 0.0
-        random_action[4] = 0.0
-
-        obs, _, _, _ = self.core_env.step(random_action)
+        obs, _, _, _ = self.core_env.step(action)
 
         return obs
 
