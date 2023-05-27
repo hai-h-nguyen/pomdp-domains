@@ -70,6 +70,10 @@ class PegInsertionEnv(gym.Env):
         action = np.insert(action, len(action), -1)
         obs, reward, done, info = self.core_env.step(action)
 
+        info = {}
+
+        info["success"] = reward > 0.0
+
         return self._process_obs(obs), reward, done, info
 
     def render(self, mode='human'):
