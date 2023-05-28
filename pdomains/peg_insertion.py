@@ -39,7 +39,7 @@ class PegInsertionEnv(gym.Env):
         # Wrap this environment in a visualization wrapper
         self.core_env = VisualizationWrapper(env, indicator_configs=None)
 
-        high_action = np.ones(6)
+        high_action = np.ones(4)  # delta_x, delta_y, delta_z, delta_gamma
         self.action_space = spaces.Box(-high_action, high_action)
 
         self.observation_space = gym.spaces.Box(
@@ -67,7 +67,7 @@ class PegInsertionEnv(gym.Env):
         return obs
 
     def step(self, action):
-        action = np.insert(action, len(action), -1)
+        action = self._process_action(action)
         obs, reward, done, info = self.core_env.step(action)
 
         info = {}
@@ -83,11 +83,20 @@ class PegInsertionEnv(gym.Env):
         self.core_env.reset()
 
         action = self.np_random.uniform(-1, 1, size=6)
-        action = np.insert(action, len(action), -1)
+
+        action = self._process_action(action)
 
         obs, _, _, _ = self.core_env.step(action)
 
         return self._process_obs(obs)
+
+    def _process_action(self, action):
+        sent_action = np.zeros(7)
+        sent_action[-1] = -1  # gripper
+        sent_action[:3] = action[:3]  # delta x, y, z
+        sent_action[5] = action[3]  # delta gamma
+
+        return sent_action
 
     def close(self):
         pass
