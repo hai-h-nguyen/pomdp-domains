@@ -43,7 +43,7 @@ class PegInsertionEnv(gym.Env):
         self.action_space = spaces.Box(-high_action, high_action)
 
         self.observation_space = gym.spaces.Box(
-            shape=(9,), low=-np.inf, high=np.inf, dtype=np.float32
+            shape=(7,), low=-np.inf, high=np.inf, dtype=np.float32
         )
 
         self.seed(seed=seed)
@@ -66,7 +66,7 @@ class PegInsertionEnv(gym.Env):
         """
         select features to create the observation
         """
-        obs = np.concatenate((obs["forces"], obs["torques"], obs["robot0_eef_pos"]))
+        obs = np.concatenate((obs["peg_pos"], obs["peg_quat"]))
         return obs
 
     def step(self, action):
@@ -76,6 +76,8 @@ class PegInsertionEnv(gym.Env):
         info = {}
 
         info["success"] = reward > 0.0
+
+        reward = self._calculate_reward(obs, action)
 
         return self._process_obs(obs), reward, done, info
 
@@ -111,7 +113,14 @@ class PegInsertionEnv(gym.Env):
         """
         calculate dense reward for training SAC w. state
         """
-        pass
+        peg_pos = obs["peg_pos"]
+        hole_pos = obs["hole_pos"]
+        error_pos = peg_pos - hole_pos
+
+        reward = -error_pos[0]**2 - error_pos[1]**2 - 10.0*error_pos[2]**2
+        reward -= 0.1*np.linalg.norm(action)
+
+        return reward
 
     def close(self):
         pass
