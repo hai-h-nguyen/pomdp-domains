@@ -39,14 +39,16 @@ class PegInsertionEnv(gym.Env):
         # Wrap this environment in a visualization wrapper
         self.core_env = VisualizationWrapper(env, indicator_configs=None)
 
-        high_action = np.ones(4)  # delta_x, delta_y, delta_z, delta_gamma
+        high_action = np.ones(3)  # delta_x, delta_y, delta_z, delta_gamma
         self.action_space = spaces.Box(-high_action, high_action)
 
         self.observation_space = gym.spaces.Box(
-            shape=(7,), low=-np.inf, high=np.inf, dtype=np.float32
+            shape=(9,), low=-np.inf, high=np.inf, dtype=np.float32
         )
 
-        self.seed(seed=seed)
+        self.seed(seed)
+
+        self.render_mode = "human"
 
     def query_expert(self):
         """_summary_
@@ -66,8 +68,8 @@ class PegInsertionEnv(gym.Env):
         """
         select features to create the observation
         """
-        obs = np.concatenate((obs["peg_pos"], obs["peg_quat"]))
-        return obs
+        assert len(obs["all_sensors"]) == 24
+        return obs["all_sensors"][:9]
 
     def step(self, action):
         action = self._process_action(action)
@@ -105,7 +107,7 @@ class PegInsertionEnv(gym.Env):
         sent_action = np.zeros(7)
         sent_action[-1] = -1  # gripper
         sent_action[:3] = action[:3]  # delta x, y, z
-        sent_action[5] = action[3]  # delta gamma
+        # sent_action[5] = action[3]  # delta gamma
 
         return sent_action
 
@@ -113,12 +115,18 @@ class PegInsertionEnv(gym.Env):
         """
         calculate dense reward for training SAC w. state
         """
-        peg_pos = obs["peg_pos"]
-        hole_pos = obs["hole_pos"]
-        error_pos = peg_pos - hole_pos
+        obs = obs["all_sensors"]
+        error_pos = obs[:3]
 
-        reward = -error_pos[0]**2 - error_pos[1]**2 - 10.0*error_pos[2]**2
-        reward -= 0.1*np.linalg.norm(action)
+        reward = -error_pos[0]**2 - error_pos[1]**2 - 10*error_pos[2]**2
+
+        d2g = np.linalg.norm(error_pos[:2])
+
+        if d2g > 0.007:
+            weight_z = 1.0
+        else:
+            weight_z = 0.001
+        reward -= weight_z*action[2]**2
 
         return reward
 
