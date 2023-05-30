@@ -66,8 +66,8 @@ class PegInsertionEnv(gym.Env):
         """
         select features to create the observation
         """
-        obs = np.concatenate((obs["forces"], obs["torques"], obs["robot0_eef_pos"]))
-        return obs
+        all_data = obs["all_sensors"]
+        return all_data[-9:]
 
     def step(self, action):
         action = self._process_action(action)
