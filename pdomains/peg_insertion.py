@@ -67,6 +67,9 @@ class PegInsertionEnv(gym.Env):
 
         info["success"] = reward > 0.0
 
+        if reward > 0.0:
+            done = True
+
         return self._process_obs(obs), reward, done, info
 
     def render(self, mode='human'):

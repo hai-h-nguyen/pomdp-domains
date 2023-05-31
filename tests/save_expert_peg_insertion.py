@@ -40,7 +40,7 @@ device.start_control()
 
 env = gym.make('pdomains-peg-insertion-v0', rendering=True)
 
-episode_cnt = 49
+episode_cnt = 0
 
 while True:
     step_cnt = 0
