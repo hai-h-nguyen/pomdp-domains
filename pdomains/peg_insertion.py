@@ -23,6 +23,8 @@ class PegInsertionEnv(gym.Env):
             "controller_configs": controller_config,
         }
 
+        self.rendering = rendering
+
         # Create environment
         env = suite.make(
             **config,
@@ -70,6 +72,9 @@ class PegInsertionEnv(gym.Env):
         if reward > 0.0:
             done = True
 
+        if self.rendering:
+            self.core_env.render()
+
         return self._process_obs(obs), reward, done, info
 
     def render(self, mode='human'):
@@ -86,6 +91,9 @@ class PegInsertionEnv(gym.Env):
         action = self._process_action(action)
 
         obs, _, _, _ = self.core_env.step(action)
+
+        if self.rendering:
+            self.core_env.render()
 
         return self._process_obs(obs)
 
