@@ -58,7 +58,6 @@ while True:
         action[1] = action_dict["left_right"]
         action[2] = action_dict["up_down"]
         # action[3:6] = action_dict["rot_left_right"]
-        # action[6] = -1  # gripper no control
 
         step_cnt += 1
 
@@ -75,12 +74,14 @@ while True:
 
         terminal = True if reward > 0 else done
 
+        # only buffer the data if action is non-zero or reward is positive
         if np.linalg.norm(action) > 0 or reward > 0:
             true_step_cnt += 1
             episode_data.append((obs, action[:3], next_obs, reward, terminal, true_step_cnt))
             obs = next_obs.copy()
 
         if done or reward > 0:
+            # only save successful episode
             if reward > 0:
                 data_reader.log_episode(episode_data)
                 episode_cnt += 1

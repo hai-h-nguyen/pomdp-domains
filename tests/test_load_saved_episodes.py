@@ -18,7 +18,7 @@ for i in range(args.max):
     # print('Done:', data['done'])
 
     assert len(data['obs']) == len(data['action']) == len(data['next_obs']) == len(data['reward']) == len(data['done']), i
-    assert (data['obs'][1:] == data['next_obs'][:-1]).all()
-    assert data['reward'][-1] > 0, i
+    assert (data['obs'][1:] == data['next_obs'][:-1]).all()  # check next_obs
+    assert data['reward'][-1] > 0, i  # check success episode
 
     print(f"Episode {i} length {len(data['obs'])}")
