@@ -48,16 +48,6 @@ class PegInsertionEnv(gym.Env):
 
         self.seed(seed=seed)
 
-    def query_expert(self):
-        """_summary_
-
-        Args:
-
-        Returns:
-            _type_: expert action
-        """
-        pass
-
     def seed(self, seed=0):
         self.np_random, seed_ = seeding.np_random(seed)
         return seed_
