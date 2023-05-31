@@ -32,7 +32,7 @@ class PegInsertionEnv(gym.Env):
             ignore_done=True,
             use_camera_obs=False,
             reward_shaping=True,
-            control_freq=20,
+            control_freq=10,
             hard_reset=False,
         )
 
@@ -109,7 +109,7 @@ class PegInsertionEnv(gym.Env):
         sent_action[:3] = action[:3]  # delta x, y, z
         # sent_action[5] = action[3]  # delta gamma
 
-        return sent_action
+        return sent_action*0.025
 
     def _calculate_reward(self, obs, action):
         """

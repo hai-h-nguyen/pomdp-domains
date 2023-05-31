@@ -5,7 +5,7 @@ import gym
 env = gym.make("pdomains-peg-insertion-state-v0")
 
 # model = SAC("MlpPolicy", env, verbose=1)
-# model.learn(total_timesteps=10000, log_interval=4)
+# model.learn(total_timesteps=100000, log_interval=4)
 # model.save("new")
 
 # del model # remove to demonstrate saving and loading
