@@ -155,19 +155,19 @@ register(
 register(
     id='pdomains-peg-insertion-square-v0',
     entry_point='pdomains.peg_insertion:PegInsertionEnv',
-    max_episode_steps=200,
+    max_episode_steps=100,
     kwargs={"peg_type": "square"}
 )
 
 register(
     id='pdomains-peg-insertion-hex-star-v0',
     entry_point='pdomains.peg_insertion:PegInsertionEnv',
-    max_episode_steps=200,
+    max_episode_steps=100,
     kwargs={"peg_type": "hex-star"}
 )
 
 register(
     id='pdomains-peg-insertion-state-v0',
     entry_point='pdomains.peg_insertion_state:PegInsertionEnv',
-    max_episode_steps=200,
+    max_episode_steps=100,
 )

@@ -93,7 +93,7 @@ class PegInsertionEnv(gym.Env):
         """
         self.core_env.reset()
 
-        action = self.np_random.uniform(-1, 1, size=6)
+        action = self.action_space.sample()
 
         action = self._process_action(action)
 
