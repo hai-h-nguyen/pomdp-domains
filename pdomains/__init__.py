@@ -155,7 +155,7 @@ register(
 register(
     id='pdomains-peg-insertion-square-v0',
     entry_point='pdomains.peg_insertion:PegInsertionEnv',
-    max_episode_steps=100,
+    max_episode_steps=1000,
     kwargs={"peg_type": "square"}
 )
 
@@ -167,7 +167,15 @@ register(
 )
 
 register(
-    id='pdomains-peg-insertion-state-v0',
+    id='pdomains-peg-insertion-state-square-v0',
     entry_point='pdomains.peg_insertion_state:PegInsertionEnv',
     max_episode_steps=100,
+    kwargs={"peg_type": "square"}
+)
+
+register(
+    id='pdomains-peg-insertion-state-hex-star-v0',
+    entry_point='pdomains.peg_insertion_state:PegInsertionEnv',
+    max_episode_steps=100,
+    kwargs={"peg_type": "hex-star"}
 )

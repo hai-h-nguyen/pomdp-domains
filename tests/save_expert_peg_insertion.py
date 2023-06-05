@@ -55,7 +55,7 @@ while True:
 
         action = np.zeros(7)
         action[0] = action_dict["front_back"]
-        action[1] = action_dict["left_right"]
+        # action[1] = action_dict["left_right"]
         action[2] = action_dict["up_down"]
         # action[3:6] = action_dict["rot_left_right"]
 
@@ -75,9 +75,10 @@ while True:
         terminal = True if reward > 0 else done
 
         # only buffer the data if action is non-zero or reward is positive
-        if np.linalg.norm(action) > 0 or reward > 0:
+        if action[0]**2 + action[2]**2 > 0 or reward > 0:
             true_step_cnt += 1
-            episode_data.append((obs, action[:3], next_obs, reward, terminal, true_step_cnt))
+            # episode_data.append((obs, action[:3], next_obs, reward, terminal, true_step_cnt))
+            episode_data.append((obs, np.array([action[0], action[2]]), next_obs, reward, terminal, true_step_cnt))
             obs = next_obs.copy()
 
         if done or reward > 0:

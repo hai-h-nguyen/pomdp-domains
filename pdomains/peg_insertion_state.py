@@ -11,15 +11,22 @@ from robosuite.wrappers import VisualizationWrapper
 
 
 class PegInsertionEnv(gym.Env):
-    def __init__(self, rendering=False, seed=0):
+    def __init__(self, rendering=False, seed=0, peg_type="square"):
 
         # Get controller config
         controller_config = load_controller_config(default_controller="IK_POSE")
 
+        if peg_type == "square":
+            robot = "SoftUR5eSquare"
+        elif peg_type == "hex-star":
+            robot = "SoftUR5eHexStar"
+        else:
+            raise ValueError("Invalid peg type: {}".format(peg_type))
+
         # Create argument configuration
         config = {
             "env_name": "SoftPegInHole",
-            "robots": "SoftUR5e",
+            "robots": robot,
             "controller_configs": controller_config,
         }
 
@@ -133,10 +140,10 @@ class PegInsertionEnv(gym.Env):
 
         d2g = np.linalg.norm(error_pos[:2])
 
-        if d2g > 0.007:
-            weight_z = 1.0
-        else:
+        if d2g < 0.007:
             weight_z = 0.001
+        else:
+            weight_z = 1.0
         reward -= weight_z*action[2]**2
 
         return reward
