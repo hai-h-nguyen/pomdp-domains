@@ -92,15 +92,19 @@ class PegInsertionEnv(gym.Env):
         """
         randomize the initial position of the peg
         """
-        time.sleep(0.01)  # sometimes the env resets incorrectly
-        return self._process_obs(self.core_env.reset())
+        self.core_env.reset()
+        time.sleep(0.01)
+
+        if self.rendering:
+            self.core_env.render()
 
         action = self.action_space.sample()
 
+        action[1] = 0.0
+
         action = self._process_action(action)
 
-        # obs, _, _, _ = self.core_env.step(action)
-        obs = self.core_env.reset()
+        obs, _, _, _ = self.core_env.step(action)
 
         if self.rendering:
             self.core_env.render()
