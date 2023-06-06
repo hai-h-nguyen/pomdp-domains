@@ -4,6 +4,7 @@ import numpy as np
 import gym
 from gym import spaces
 from gym.utils import seeding
+import time
 
 import robosuite as suite
 from robosuite import load_controller_config
@@ -91,6 +92,7 @@ class PegInsertionEnv(gym.Env):
         """
         randomize the initial position of the peg
         """
+        time.sleep(0.01)  # sometimes the env resets incorrectly
         return self._process_obs(self.core_env.reset())
 
         action = self.action_space.sample()
@@ -110,8 +112,8 @@ class PegInsertionEnv(gym.Env):
         zero out the gripper action and the rotations along XY axes
         """
         sent_action = np.zeros(7)
-        sent_action[-1] = 0  # gripper
-        sent_action[:3] = action[:3]  # delta x, y, z
+        sent_action[0] = action[0]  # delta x
+        sent_action[2] = action[1]  # delta z
         # sent_action[3] = 0
         # sent_action[5] = action[3]  # delta gamma
 

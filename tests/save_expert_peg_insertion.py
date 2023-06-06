@@ -41,6 +41,7 @@ device.start_control()
 env = gym.make('pdomains-peg-insertion-square-v0', rendering=True)
 
 episode_cnt = 0
+start_episode = episode_cnt
 
 while True:
     step_cnt = 0
@@ -53,10 +54,10 @@ while True:
     while True:
         action_dict = device.get_controller_state()
 
-        action = np.zeros(7)
+        action = np.zeros(2)
         action[0] = action_dict["front_back"]
         # action[1] = action_dict["left_right"]
-        action[2] = action_dict["up_down"]
+        action[1] = action_dict["up_down"]
         # action[3:6] = action_dict["rot_left_right"]
 
         step_cnt += 1
@@ -75,10 +76,10 @@ while True:
         terminal = True if reward > 0 else done
 
         # only buffer the data if action is non-zero or reward is positive
-        if action[0]**2 + action[2]**2 > 0 or reward > 0:
+        if np.linalg.norm(action) > 0 or reward > 0:
             true_step_cnt += 1
             # episode_data.append((obs, action[:3], next_obs, reward, terminal, true_step_cnt))
-            episode_data.append((obs, np.array([action[0], action[2]]), next_obs, reward, terminal, true_step_cnt))
+            episode_data.append((obs, action, next_obs, reward, terminal, true_step_cnt))
             obs = next_obs.copy()
 
         if done or reward > 0:
@@ -86,7 +87,7 @@ while True:
             if reward > 0:
                 data_reader.log_episode(episode_data)
                 episode_cnt += 1
-                print("Episode Success, Saved", np.linalg.norm(action))
+                print(f"Episode {episode_cnt - start_episode} Success, Saved")
             else:
                 print("Episode Failed, Not Saved")
 
