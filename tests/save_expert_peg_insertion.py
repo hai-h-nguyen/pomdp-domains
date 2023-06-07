@@ -61,10 +61,10 @@ while True:
     while True:
         action_dict = device.get_controller_state()
 
-        action = np.zeros(3)
+        action = np.zeros(2)
         action[0] = action_dict["front_back"]
-        action[1] = action_dict["left_right"]
-        action[2] = action_dict["up_down"]
+        # action[1] = action_dict["left_right"]
+        action[1] = action_dict["up_down"]
 
         step_cnt += 1
 

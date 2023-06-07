@@ -17,6 +17,7 @@ class PegInsertionEnv(gym.Env):
         # Get controller config
         controller_config = load_controller_config(default_controller="IK_POSE")
 
+        self.action_scaler = 0.02
         if peg_type == "square":
             robot = "SoftUR5eSquare"
         elif peg_type == "hex-star":
@@ -30,8 +31,6 @@ class PegInsertionEnv(gym.Env):
             "robots": robot,
             "controller_configs": controller_config,
         }
-
-        self.action_scaler = 0.02
 
         self.rendering = rendering
 
@@ -51,7 +50,7 @@ class PegInsertionEnv(gym.Env):
         # Wrap this environment in a visualization wrapper
         self.core_env = VisualizationWrapper(env, indicator_configs=None)
 
-        high_action = np.ones(3)  # delta_x, delta_y, delta_z
+        high_action = np.ones(2)  # delta_x, delta_y, delta_z
         self.action_space = spaces.Box(-high_action, high_action)
 
         self.observation_space = gym.spaces.Box(
@@ -73,6 +72,7 @@ class PegInsertionEnv(gym.Env):
         """
         select features to create the observation
         """
+        assert len(obs["all_sensors"]) == 24
         all_data = obs["all_sensors"]
 
         self.state_data = all_data[:9]  # peg2hole: relative x, y, z, sin euler, cos euler
@@ -111,11 +111,13 @@ class PegInsertionEnv(gym.Env):
 
         action = self.action_space.sample()
 
-        action[2] = action[2] if action[2] > 0 else 0.0  # don't push down
+        # action[1] = 0.0
+        action[1] = 0.0 if action[1] < 0.0 else action[1]
 
         action = self._process_action(action)
 
-        obs, _, _, _ = self.core_env.step(action)
+        for _ in range(5):
+            obs, _, _, _ = self.core_env.step(action)
 
         if self.rendering:
             self.core_env.render()
@@ -127,15 +129,10 @@ class PegInsertionEnv(gym.Env):
         zero out the gripper action and the rotations along XY axes
         """
         sent_action = np.zeros(7)
-        sent_action[0:3] = action  # delta x, y, z
+        sent_action[0] = action[0]  # delta x, y, z
+        sent_action[2] = action[1]  # delta x, y, z
 
         return sent_action*self.action_scaler
-
-    def _calculate_reward(self, obs, action):
-        """
-        calculate dense reward for training SAC w. state
-        """
-        pass
 
     def close(self):
         pass

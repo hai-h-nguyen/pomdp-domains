@@ -16,6 +16,7 @@ class PegInsertionEnv(gym.Env):
         # Get controller config
         controller_config = load_controller_config(default_controller="IK_POSE")
 
+        self.action_scaler = 0.02
         if peg_type == "square":
             robot = "SoftUR5eSquare"
         elif peg_type == "hex-star":
@@ -48,7 +49,7 @@ class PegInsertionEnv(gym.Env):
         # Wrap this environment in a visualization wrapper
         self.core_env = VisualizationWrapper(env, indicator_configs=None)
 
-        high_action = np.ones(3)  # delta_x, delta_y, delta_z, delta_gamma
+        high_action = np.ones(3)  # delta_x, delta_y, delta_z
         self.action_space = spaces.Box(-high_action, high_action)
 
         self.observation_space = gym.spaces.Box(
@@ -56,18 +57,6 @@ class PegInsertionEnv(gym.Env):
         )
 
         self.seed(seed)
-
-        self.render_mode = "human"
-
-    def query_expert(self):
-        """_summary_
-
-        Args:
-
-        Returns:
-            _type_: expert action
-        """
-        pass
 
     def seed(self, seed=0):
         self.np_random, seed_ = seeding.np_random(seed)
@@ -88,9 +77,7 @@ class PegInsertionEnv(gym.Env):
 
         info["success"] = reward > 0.0
 
-        reward = self._calculate_reward(obs, action)
-
-        if info["success"]:
+        if reward > 0.0:
             done = True
 
         if self.rendering:
@@ -107,7 +94,12 @@ class PegInsertionEnv(gym.Env):
         """
         self.core_env.reset()
 
+        if self.rendering:
+            self.core_env.render()
+
         action = self.action_space.sample()
+
+        action[2] = action[2] if action[2] > 0 else 0.0  # don't push down
 
         action = self._process_action(action)
 
@@ -123,30 +115,9 @@ class PegInsertionEnv(gym.Env):
         zero out the gripper action and the rotations along XY axes
         """
         sent_action = np.zeros(7)
-        sent_action[-1] = -1  # gripper
-        sent_action[:3] = action[:3]  # delta x, y, z
-        # sent_action[5] = action[3]  # delta gamma
+        sent_action[0:3] = action  # delta x, y, z
 
-        return sent_action*0.025
-
-    def _calculate_reward(self, obs, action):
-        """
-        calculate dense reward for training SAC w. state
-        """
-        obs = obs["all_sensors"]
-        error_pos = obs[:3]
-
-        reward = -error_pos[0]**2 - error_pos[1]**2 - 10*error_pos[2]**2
-
-        d2g = np.linalg.norm(error_pos[:2])
-
-        if d2g < 0.007:
-            weight_z = 0.001
-        else:
-            weight_z = 1.0
-        reward -= weight_z*action[2]**2
-
-        return reward
+        return sent_action*self.action_scaler
 
     def close(self):
         pass
