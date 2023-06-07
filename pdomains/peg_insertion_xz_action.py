@@ -31,8 +31,6 @@ class PegInsertionEnv(gym.Env):
             "controller_configs": controller_config,
         }
 
-        self.action_scaler = 0.02
-
         self.rendering = rendering
 
         # Create environment
@@ -51,19 +49,14 @@ class PegInsertionEnv(gym.Env):
         # Wrap this environment in a visualization wrapper
         self.core_env = VisualizationWrapper(env, indicator_configs=None)
 
-        high_action = np.ones(3)  # delta_x, delta_y, delta_z
+        high_action = np.ones(2)  # delta_x, delta_z
         self.action_space = spaces.Box(-high_action, high_action)
 
         self.observation_space = gym.spaces.Box(
             shape=(9,), low=-np.inf, high=np.inf, dtype=np.float32
         )
 
-        self.state_data = None
-
         self.seed(seed=seed)
-
-    def get_state(self):
-        return self.state_data
 
     def seed(self, seed=0):
         self.np_random, seed_ = seeding.np_random(seed)
@@ -74,9 +67,6 @@ class PegInsertionEnv(gym.Env):
         select features to create the observation
         """
         all_data = obs["all_sensors"]
-
-        self.state_data = all_data[:9]  # peg2hole: relative x, y, z, sin euler, cos euler
-
         return all_data[-9:]
 
     def step(self, action):
@@ -103,15 +93,14 @@ class PegInsertionEnv(gym.Env):
         randomize the initial position of the peg
         """
         self.core_env.reset()
-
-        self.state_data = None
+        time.sleep(0.01)
 
         if self.rendering:
             self.core_env.render()
 
         action = self.action_space.sample()
 
-        action[2] = action[2] if action[2] > 0 else 0.0  # don't push down
+        action[1] = 0.0
 
         action = self._process_action(action)
 
@@ -127,9 +116,12 @@ class PegInsertionEnv(gym.Env):
         zero out the gripper action and the rotations along XY axes
         """
         sent_action = np.zeros(7)
-        sent_action[0:3] = action  # delta x, y, z
+        sent_action[0] = action[0]  # delta x
+        sent_action[2] = action[1]  # delta z
+        # sent_action[3] = 0
+        # sent_action[5] = action[3]  # delta gamma
 
-        return sent_action*self.action_scaler
+        return sent_action*0.025
 
     def _calculate_reward(self, obs, action):
         """

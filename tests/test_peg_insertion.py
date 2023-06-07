@@ -4,7 +4,7 @@ import gym
 import time
 import numpy as np
 
-env=gym.make('pdomains-peg-insertion-square-v0', rendering=True)
+env=gym.make('pdomains-peg-insertion-hex-star-v0', rendering=True)
 obs = env.reset()
 time.sleep(1)
 

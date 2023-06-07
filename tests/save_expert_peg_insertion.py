@@ -16,13 +16,16 @@ class EpisodeLogger:
     def log_episode(self, episode):
         valid_episode = []
         for i in range(len(episode)):
-            obs, action, next_obs, reward, done, true_step_cnt = episode[i]
-            valid_episode.append((obs, action, next_obs, reward, done))
+            obs, action, next_obs, reward, done, true_step_cnt, state, next_state = episode[i]
+            valid_episode.append((obs, action, next_obs, reward, done, state, next_state))
         if valid_episode:
             assert len(valid_episode) == true_step_cnt, f"{len(valid_episode)} != {true_step_cnt}"
-            obs, action, next_obs, reward, done = zip(*valid_episode)
+            obs, action, next_obs, reward, done, state, next_state = zip(*valid_episode)
             np.savez(self.filename, obs=np.array(obs), action=np.array(action), 
                      next_obs=np.array(next_obs), reward=np.array(reward), done=np.array(done))
+
+            np.savez('state-' + self.filename, obs=np.array(state), action=np.array(action), 
+                     next_obs=np.array(next_state), reward=np.array(reward), done=np.array(done))
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--pos-xy-scale", type=float, default=1.0, help="How much to scale position user inputs")
@@ -46,7 +49,11 @@ start_episode = episode_cnt
 while True:
     step_cnt = 0
     true_step_cnt = 0
+
+    time.sleep(0.5)
+
     obs = env.reset()
+    state = env.get_state()
 
     data_reader = EpisodeLogger(f"{episode_cnt}")
     episode_data = []
@@ -54,11 +61,10 @@ while True:
     while True:
         action_dict = device.get_controller_state()
 
-        action = np.zeros(2)
+        action = np.zeros(3)
         action[0] = action_dict["front_back"]
-        # action[1] = action_dict["left_right"]
-        action[1] = action_dict["up_down"]
-        # action[3:6] = action_dict["rot_left_right"]
+        action[1] = action_dict["left_right"]
+        action[2] = action_dict["up_down"]
 
         step_cnt += 1
 
@@ -71,6 +77,7 @@ while True:
             break
 
         next_obs, reward, done, info = env.step(action)
+        next_state = env.get_state()
         env.render()
 
         terminal = True if reward > 0 else done
@@ -78,9 +85,9 @@ while True:
         # only buffer the data if action is non-zero or reward is positive
         if np.linalg.norm(action) > 0 or reward > 0:
             true_step_cnt += 1
-            # episode_data.append((obs, action[:3], next_obs, reward, terminal, true_step_cnt))
-            episode_data.append((obs, action, next_obs, reward, terminal, true_step_cnt))
+            episode_data.append((obs, action, next_obs, reward, terminal, true_step_cnt, state, next_state))
             obs = next_obs.copy()
+            state = next_state.copy()
 
         if done or reward > 0:
             # only save successful episode
