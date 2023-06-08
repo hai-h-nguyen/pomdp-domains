@@ -7,6 +7,15 @@ register(
     kwargs={"peg_type": "square"}
 )
 
+
+register(
+    id='pdomains-peg-insertion-square-xz-v0',
+    entry_point='pdomains.peg_insertion_xz:PegInsertionEnv',
+    max_episode_steps=150,
+    kwargs={"peg_type": "square"}
+)
+
+
 register(
     id='pdomains-peg-insertion-hex-star-v0',
     entry_point='pdomains.peg_insertion:PegInsertionEnv',
