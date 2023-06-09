@@ -56,9 +56,6 @@ class PegInsertionEnv(gym.Env):
             shape=(9,), low=-np.inf, high=np.inf, dtype=np.float32
         )
 
-        # only include p_x, p_z, f_x, f_z
-        self.obs_dims = [0, 2, 3, 5]
-
         self.state_data = None
         self.full_obs = None
 
@@ -80,7 +77,7 @@ class PegInsertionEnv(gym.Env):
         full_obs = all_data[-9:]
         self.full_obs = full_obs.copy()
 
-        return full_obs[self.obs_dims].copy()
+        return full_obs
 
     def step(self, action):
         action = self._process_action(action)
