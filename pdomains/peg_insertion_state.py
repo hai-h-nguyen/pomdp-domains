@@ -49,14 +49,20 @@ class PegInsertionEnv(gym.Env):
         # Wrap this environment in a visualization wrapper
         self.core_env = VisualizationWrapper(env, indicator_configs=None)
 
-        high_action = np.ones(3)  # delta_x, delta_y, delta_z
+        high_action = np.ones(2)  # delta_x, delta_y, delta_z
         self.action_space = spaces.Box(-high_action, high_action)
 
         self.observation_space = gym.spaces.Box(
-            shape=(9,), low=-np.inf, high=np.inf, dtype=np.float32
+            shape=(4,), low=-np.inf, high=np.inf, dtype=np.float32
         )
 
-        self.seed(seed)
+        # only include p_x, p_z, f_x, f_z
+        self.obs_dims = [0, 2, 3, 5]
+
+        self.state_data = None
+        self.full_obs = None
+
+        self.seed(seed=seed)
 
     def seed(self, seed=0):
         self.np_random, seed_ = seeding.np_random(seed)
@@ -67,7 +73,14 @@ class PegInsertionEnv(gym.Env):
         select features to create the observation
         """
         assert len(obs["all_sensors"]) == 24
-        return obs["all_sensors"][:9]
+        all_data = obs["all_sensors"]
+
+        self.state_data = all_data[:9]  # peg2hole: relative x, y, z, sin euler, cos euler
+
+        full_obs = all_data[-9:]
+        self.full_obs = full_obs.copy()
+
+        return full_obs[self.obs_dims].copy()
 
     def step(self, action):
         action = self._process_action(action)
@@ -99,11 +112,12 @@ class PegInsertionEnv(gym.Env):
 
         action = self.action_space.sample()
 
-        action[2] = action[2] if action[2] > 0 else 0.0  # don't push down
+        action[1] = 0.0 if action[1] < 0.0 else action[1]
 
         action = self._process_action(action)
 
-        obs, _, _, _ = self.core_env.step(action)
+        for _ in range(5):
+            obs, _, _, _ = self.core_env.step(action)
 
         if self.rendering:
             self.core_env.render()
@@ -115,7 +129,8 @@ class PegInsertionEnv(gym.Env):
         zero out the gripper action and the rotations along XY axes
         """
         sent_action = np.zeros(7)
-        sent_action[0:3] = action  # delta x, y, z
+        sent_action[0] = action[0]  # delta x
+        sent_action[2] = action[1]  # delta z
 
         return sent_action*self.action_scaler
 

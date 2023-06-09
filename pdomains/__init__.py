@@ -26,7 +26,7 @@ register(
 register(
     id='pdomains-peg-insertion-state-square-v0',
     entry_point='pdomains.peg_insertion_state:PegInsertionEnv',
-    max_episode_steps=200,
+    max_episode_steps=150,
     kwargs={"peg_type": "square"}
 )
 
