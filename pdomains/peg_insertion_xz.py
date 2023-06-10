@@ -53,11 +53,11 @@ class PegInsertionEnv(gym.Env):
         high_action = np.ones(2)  # delta_x, delta_z
         self.action_space = spaces.Box(-high_action, high_action)
 
+        # relative x, relative z, f_x, f_z
         self.observation_space = gym.spaces.Box(
             shape=(4,), low=-np.inf, high=np.inf, dtype=np.float32
         )
 
-        # only include p_x, p_z, f_x, f_z
         self.obs_dims = [0, 2, 3, 5]
 
         self.state_data = None
