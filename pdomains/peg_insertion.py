@@ -112,7 +112,7 @@ class PegInsertionEnv(gym.Env):
         action = self.action_space.sample()
 
         # action[1] = 0.0
-        action[1] = 0.0 if action[1] < 0.0 else action[1]
+        action[2] = 0.0 if action[2] < 0.0 else action[2]
 
         action = self._process_action(action)
 
