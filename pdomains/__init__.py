@@ -15,6 +15,13 @@ register(
     kwargs={"peg_type": "square"}
 )
 
+register(
+    id='peg-insertion-xz-state-filtered-v0',
+    entry_point='pdomains.peg_insertion_xz_state_filtered:PegInsertionEnv',
+    max_episode_steps=150,
+    kwargs={"peg_type": "square"}
+)
+
 
 register(
     id='pdomains-peg-insertion-hex-star-v0',
