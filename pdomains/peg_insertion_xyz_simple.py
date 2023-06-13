@@ -52,16 +52,23 @@ class PegInsertionEnv(gym.Env):
         high_action = np.ones(3)  # delta_x, delta_y, delta_z
         self.action_space = spaces.Box(-high_action, high_action)
 
+        # relative x, relative_y, relative z, f_x, f_y, f_z
         self.observation_space = gym.spaces.Box(
-            shape=(9,), low=-np.inf, high=np.inf, dtype=np.float32
+            shape=(6,), low=-np.inf, high=np.inf, dtype=np.float32
         )
 
+        self.obs_dims = [0, 1, 2, 3, 4, 5]
+
         self.state_data = None
+        self.full_obs = None
 
         self.seed(seed=seed)
 
     def get_state(self):
         return self.state_data
+
+    def get_full_obs(self):
+        return self.full_obs
 
     def seed(self, seed=0):
         self.np_random, seed_ = seeding.np_random(seed)
@@ -76,7 +83,10 @@ class PegInsertionEnv(gym.Env):
 
         self.state_data = all_data[:9]  # peg2hole: relative x, y, z, sin euler, cos euler
 
-        return all_data[-9:]
+        full_obs = all_data[-9:]
+        self.full_obs = full_obs.copy()
+
+        return full_obs[self.obs_dims].copy()
 
     def step(self, action):
         action = self._process_action(action)
@@ -110,7 +120,12 @@ class PegInsertionEnv(gym.Env):
 
         action = self.action_space.sample()
 
-        # action[1] = 0.0
+        coin_flip = np.random.randint(2)
+        if coin_flip == 0:
+            action[0] = 0.0
+        else:
+            action[1] = 0.0
+
         action[2] = 0.0 if action[2] < 0.0 else action[2]
 
         action = self._process_action(action)
