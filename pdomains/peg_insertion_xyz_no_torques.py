@@ -53,7 +53,7 @@ class PegInsertionEnv(gym.Env):
         self.action_space = spaces.Box(-high_action, high_action)
 
         self.observation_space = gym.spaces.Box(
-            shape=(9,), low=-np.inf, high=np.inf, dtype=np.float32
+            shape=(6,), low=-np.inf, high=np.inf, dtype=np.float32
         )
 
         self.state_data = None
@@ -76,7 +76,7 @@ class PegInsertionEnv(gym.Env):
 
         self.state_data = all_data[:9]  # peg2hole: relative x, y, z, sin euler, cos euler
 
-        return all_data[-9:]
+        return all_data[-9:-3]
 
     def step(self, action):
         action = self._process_action(action)
@@ -110,7 +110,7 @@ class PegInsertionEnv(gym.Env):
 
         action = self.action_space.sample()
 
-        # action[1] = 0.0
+        # not pushing down on the Z axis
         action[2] = 0.0 if action[2] < 0.0 else action[2]
 
         action = self._process_action(action)
