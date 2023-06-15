@@ -11,12 +11,10 @@ from robosuite.wrappers import VisualizationWrapper
 
 
 class PegInsertionEnv(gym.Env):
-    def __init__(self, rendering=False, seed=0, peg_type="square", torques=False):
+    def __init__(self, rendering=False, seed=0, peg_type="square"):
 
         # Get controller config
         controller_config = load_controller_config(default_controller="IK_POSE")
-
-        self.include_torques = torques
 
         self.action_scaler = 0.02
         if peg_type == "square":
@@ -55,7 +53,7 @@ class PegInsertionEnv(gym.Env):
         self.action_space = spaces.Box(-high_action, high_action)
 
         self.observation_space = gym.spaces.Box(
-            shape=(6 + 3*self.include_torques,), low=-np.inf, high=np.inf, dtype=np.float32
+            shape=(9, ), low=-np.inf, high=np.inf, dtype=np.float32
         )
 
         self.state_data = None
@@ -78,10 +76,7 @@ class PegInsertionEnv(gym.Env):
 
         self.state_data = all_data[:9]  # peg2hole: relative x, y, z, sin euler, cos euler
 
-        if self.include_torques:
-            return all_data[-9:]
-        else:
-            return all_data[-9:-3]
+        return all_data[-9:]
 
     def step(self, action):
         action = self._process_action(action)

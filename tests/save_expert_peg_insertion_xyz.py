@@ -38,7 +38,7 @@ device = Joystick(pos_xy_scale=args.pos_xy_scale,
 
 device.start_control()
 
-env = gym.make('peg-insertion-square-xyz-no-torques-v0', rendering=True)
+env = gym.make('peg-insertion-square-xyz-v0', rendering=True)
 
 episode_cnt = 0
 start_episode = episode_cnt
