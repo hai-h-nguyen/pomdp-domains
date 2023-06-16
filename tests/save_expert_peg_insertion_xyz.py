@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import gym
 import time
 import numpy as np
-import csv
 
 import argparse
 from robosuite.devices import Joystick
