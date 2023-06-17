@@ -108,7 +108,7 @@ class PegInsertionEnv(gym.Env):
         if self.rendering:
             self.core_env.render()
 
-        action = self.np_random.rand(3)
+        action = self.action_space.sample()
 
         # not pushing down on the Z axis
         action[2] = 0.0 if action[2] < 0.0 else action[2]

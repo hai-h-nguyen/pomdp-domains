@@ -118,7 +118,7 @@ class PegInsertionEnv(gym.Env):
         if self.rendering:
             self.core_env.render()
 
-        action = self.np_random.rand(2)
+        action = self.action_space.sample()
 
         action[1] = 0.0 if action[1] < 0.0 else action[1]
 
