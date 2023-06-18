@@ -71,7 +71,7 @@ class PegInsertionEnv(gym.Env):
         """
         select features to create the observation
         """
-        assert len(obs["all_sensors"]) == 24
+        assert len(obs["all_sensors"]) == 25
         all_data = obs["all_sensors"]
 
         self.state_data = all_data[:9]  # peg2hole: relative x, y, z, sin euler, cos euler
@@ -86,7 +86,7 @@ class PegInsertionEnv(gym.Env):
 
         info["success"] = reward > 0.0
 
-        if reward > 0.0:
+        if reward > 0.0 or obs["all_sensors"][-10]:
             done = True
 
         if self.rendering:
