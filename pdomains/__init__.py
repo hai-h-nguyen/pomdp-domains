@@ -15,3 +15,10 @@ register(
     max_episode_steps=200,
     kwargs={"peg_type": "square"}
 )
+
+register(
+    id='peg-insertion-oblong-xyz-v0',
+    entry_point='pdomains.peg_insertion_xyz:PegInsertionEnv',
+    max_episode_steps=200,
+    kwargs={"peg_type": "oblong"}
+)
