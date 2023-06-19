@@ -22,3 +22,10 @@ register(
     max_episode_steps=200,
     kwargs={"peg_type": "oblong"}
 )
+
+register(
+    id='peg-insertion-hex-star-xyz-v0',
+    entry_point='pdomains.peg_insertion_xyz:PegInsertionEnv',
+    max_episode_steps=200,
+    kwargs={"peg_type": "hex-star"}
+)

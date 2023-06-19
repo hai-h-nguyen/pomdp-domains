@@ -19,7 +19,7 @@ class PegInsertionEnv(gym.Env):
         self.action_scaler = 0.02
         if peg_type == "square":
             robot = "SoftUR5eSquare"
-        if peg_type == "oblong":
+        elif peg_type == "oblong":
             robot = "SoftUR5eOblong"
         elif peg_type == "hex-star":
             robot = "SoftUR5eHexStar"
