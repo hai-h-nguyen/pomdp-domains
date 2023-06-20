@@ -23,6 +23,8 @@ class PegInsertionEnv(gym.Env):
             robot = "SoftUR5eOblong"
         elif peg_type == "hex-star":
             robot = "SoftUR5eHexStar"
+        elif peg_type == "triangle":
+            robot = "SoftUR5eTriangle"
         else:
             raise ValueError("Invalid peg type: {}".format(peg_type))
 
@@ -129,7 +131,7 @@ class PegInsertionEnv(gym.Env):
         """
         zero out the gripper action and the rotations along XY axes
         """
-        sent_action = np.zeros(7)
+        sent_action = np.zeros(6)
         sent_action[:3] = action  # delta x, y, z
 
         return sent_action*self.action_scaler

@@ -125,7 +125,7 @@ class PegInsertionEnv(gym.Env):
         """
         zero out the gripper action and the rotations along XY axes
         """
-        sent_action = np.zeros(7)
+        sent_action = np.zeros(6)
         sent_action[0] = action[0]  # delta x
         sent_action[2] = action[1]  # delta z
 
