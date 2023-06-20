@@ -24,15 +24,24 @@ register(
 )
 
 register(
-    id='peg-insertion-hex-star-xyz-v0',
-    entry_point='pdomains.peg_insertion_xyz:PegInsertionEnv',
-    max_episode_steps=200,
-    kwargs={"peg_type": "hex-star"}
-)
-
-register(
     id='peg-insertion-triangle-xyz-v0',
     entry_point='pdomains.peg_insertion_xyz:PegInsertionEnv',
     max_episode_steps=200,
     kwargs={"peg_type": "triangle"}
+)
+
+
+# State version
+register(
+    id='peg-insertion-square-state-xz-v0',
+    entry_point='pdomains.peg_insertion_xz:PegInsertionEnv',
+    max_episode_steps=200,
+    kwargs={"peg_type": "square", "return_state": True}
+)
+
+register(
+    id='peg-insertion-square-state-xyz-v0',
+    entry_point='pdomains.peg_insertion_xyz:PegInsertionEnv',
+    max_episode_steps=200,
+    kwargs={"peg_type": "square", "return_state": True}
 )

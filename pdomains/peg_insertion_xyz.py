@@ -11,7 +11,7 @@ from robosuite.wrappers import VisualizationWrapper
 
 
 class PegInsertionEnv(gym.Env):
-    def __init__(self, rendering=False, seed=0, peg_type="square"):
+    def __init__(self, rendering=False, seed=0, peg_type="square", return_state=False):
 
         # Get controller config
         controller_config = load_controller_config(default_controller="IK_POSE")
@@ -21,8 +21,6 @@ class PegInsertionEnv(gym.Env):
             robot = "SoftUR5eSquare"
         elif peg_type == "oblong":
             robot = "SoftUR5eOblong"
-        elif peg_type == "hex-star":
-            robot = "SoftUR5eHexStar"
         elif peg_type == "triangle":
             robot = "SoftUR5eTriangle"
         else:
@@ -36,6 +34,7 @@ class PegInsertionEnv(gym.Env):
         }
 
         self.rendering = rendering
+        self.return_state = return_state
 
         # Create environment
         env = suite.make(
@@ -53,7 +52,8 @@ class PegInsertionEnv(gym.Env):
         # Wrap this environment in a visualization wrapper
         self.core_env = VisualizationWrapper(env, indicator_configs=None)
 
-        high_action = np.ones(3)  # delta_x, delta_y, delta_z
+        self.action_dim = 3
+        high_action = np.ones(self.action_dim)  # delta_x, delta_y, delta_z
         self.action_space = spaces.Box(-high_action, high_action)
 
         self.observation_space = gym.spaces.Box(
@@ -78,9 +78,13 @@ class PegInsertionEnv(gym.Env):
         assert len(obs["all_sensors"]) == 25
         all_data = obs["all_sensors"]
 
-        self.state_data = all_data[:9]  # peg2hole: relative x, y, z, sin euler, cos euler
+        peg_2_hole_xyz = all_data[:3]
 
-        return all_data[-9:]
+        self.state_data = np.concatenate((peg_2_hole_xyz, all_data[:9]))
+        if self.return_state:
+            return self.state_data.copy()
+        else:
+            return all_data[-9:]
 
     def step(self, action):
         action = self._process_action(action)
@@ -115,7 +119,8 @@ class PegInsertionEnv(gym.Env):
         action = self.action_space.sample()
 
         # not pushing down on the Z axis
-        action[2] = 0.0 if action[2] < 0.0 else action[2]
+        if action[self.action_dim - 1] < 0.0:
+            action[self.action_dim - 1] = 0.0
 
         action = self._process_action(action)
 
@@ -132,7 +137,7 @@ class PegInsertionEnv(gym.Env):
         zero out the gripper action and the rotations along XY axes
         """
         sent_action = np.zeros(6)
-        sent_action[:3] = action  # delta x, y, z
+        sent_action[:self.action_dim] = action
 
         return sent_action*self.action_scaler
 
