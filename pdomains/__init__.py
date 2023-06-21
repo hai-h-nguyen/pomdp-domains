@@ -2,6 +2,7 @@ from gym.envs.registration import register
 
 
 # POMDPs
+# Simpler version
 register(
     id='peg-insertion-square-xz-v0',
     entry_point='pdomains.peg_insertion_xz:PegInsertionEnv',
@@ -9,6 +10,7 @@ register(
     kwargs={"peg_type": "square"}
 )
 
+# Full version
 register(
     id='peg-insertion-square-xyz-v0',
     entry_point='pdomains.peg_insertion_xyz:PegInsertionEnv',
@@ -30,8 +32,7 @@ register(
     kwargs={"peg_type": "triangle"}
 )
 
-
-# State version
+# MDPs
 register(
     id='peg-insertion-square-state-xz-v0',
     entry_point='pdomains.peg_insertion_xz:PegInsertionEnv',

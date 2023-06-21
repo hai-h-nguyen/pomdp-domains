@@ -79,8 +79,9 @@ class PegInsertionEnv(gym.Env):
         all_data = obs["all_sensors"]
 
         peg_2_hole_xyz = all_data[:3]
+        force_torque_xyz = all_data[-6:]
 
-        self.state_data = np.concatenate((peg_2_hole_xyz, all_data[:9]))
+        self.state_data = np.concatenate((peg_2_hole_xyz, force_torque_xyz))
         if self.return_state:
             return self.state_data.copy()
         else:
