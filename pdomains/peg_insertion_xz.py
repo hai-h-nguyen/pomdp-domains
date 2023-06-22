@@ -56,17 +56,11 @@ class PegInsertionEnv(gym.Env):
         high_action = np.ones(self.action_dim)  # delta_x, delta_z
         self.action_space = spaces.Box(-high_action, high_action)
 
-        if self.return_state:
-            # tip relative x, z, f_x, f_z
-            self.observation_space = gym.spaces.Box(
-                shape=(4,), low=-np.inf, high=np.inf, dtype=np.float32
-            )
-        else:
-            self.obs_dims = [0, 2, 3, 5]
-            # relative x, relative z, f_x, f_z
-            self.observation_space = gym.spaces.Box(
-                shape=(len(self.obs_dims),), low=-np.inf, high=np.inf, dtype=np.float32
-            )
+        self.obs_dims = [0, 2, 3, 5]
+        # relative x, relative z, f_x, f_z
+        self.observation_space = gym.spaces.Box(
+            shape=(len(self.obs_dims),), low=-np.inf, high=np.inf, dtype=np.float32
+        )
 
         self.state_data = None
 
@@ -86,7 +80,7 @@ class PegInsertionEnv(gym.Env):
         assert len(obs["all_sensors"]) == 25
         all_data = obs["all_sensors"]
 
-        peg_2_hole_xz = all_data[:3][[0, 2]] # peg2hole: relative x, z
+        peg_2_hole_xz = all_data[:3][[0, 2]]
 
         force_xz = all_data[-9:][[0, 2]]
 

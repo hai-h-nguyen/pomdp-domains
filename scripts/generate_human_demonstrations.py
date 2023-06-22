@@ -1,4 +1,5 @@
 from pdomains import *
+import matplotlib.pyplot as plt
 import gym
 import time
 import numpy as np
@@ -30,13 +31,15 @@ class EpisodeLogger:
                 np.savez('state-' + self.filename, obs=np.array(state), action=np.array(action),
                         next_obs=np.array(next_state), reward=np.array(reward), done=np.array(done))
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--pos-xy-scale", type=float, default=1.0, help="How much to scale position user inputs")
 parser.add_argument("--pos-z-scale", type=float, default=1.0, help="How much to scale position user inputs")
 parser.add_argument("--rot-scale", type=float, default=0.05, help="How much to scale rotation user inputs")
-parser.add_argument("--show-action", action="store_true", help="Print the action")
-parser.add_argument("--save-state", action="store_true", help="Save state fils")
+parser.add_argument("--start-index", type=int, default=0, help="Start index to name files")
+parser.add_argument("--show-action", action="store_true", help="Visualize the action space of the robot")
+parser.add_argument("--save-state", action="store_true", help="Save state files")
+parser.add_argument("--domain", type=str, help="Domain to run", default="square-state-xyz")
+
 args = parser.parse_args()
 
 # initialize device
@@ -46,7 +49,7 @@ device = Joystick(pos_xy_scale=args.pos_xy_scale,
 
 device.start_control()
 
-env = gym.make('peg-insertion-square-state-xz-v0', rendering=True)
+env = gym.make(f"peg-insertion-{args.domain}-v0", rendering=True)
 
 episode_cnt = 0
 start_episode = episode_cnt
@@ -60,15 +63,23 @@ while True:
     obs = env.reset()
     state = env.get_state()
 
-    data_reader = EpisodeLogger(f"{episode_cnt}")
+    data_reader = EpisodeLogger(f"{args.start_index + episode_cnt}")
     episode_data = []
 
     while True:
         action_dict = device.get_controller_state()
 
-        action = np.zeros(2)
-        action[0] = action_dict["front_back"]
-        action[1] = action_dict["up_down"]
+        if env.action_space.shape[0] == 3:
+            action = np.zeros(3)
+            action[0] = action_dict["front_back"]
+            action[1] = action_dict["left_right"]
+            action[2] = action_dict["up_down"]
+        elif env.action_space.shape[0] == 2:
+            action = np.zeros(2)
+            action[0] = action_dict["front_back"]
+            action[1] = action_dict["up_down"]
+        else:
+            raise NotImplementedError
 
         step_cnt += 1
 
@@ -90,7 +101,7 @@ while True:
         if np.linalg.norm(action) > 0 or reward > 0:
             true_step_cnt += 1
             episode_data.append((obs, action, next_obs, reward, terminal,
-                                true_step_cnt, state, next_state))
+                                 true_step_cnt, state, next_state))
             obs = next_obs.copy()
             state = next_state.copy()
 
@@ -99,7 +110,7 @@ while True:
             if reward > 0:
                 data_reader.log_episode(episode_data, args.save_state)
                 episode_cnt += 1
-                print(f"Episode {episode_cnt - start_episode} Success, Saved")
+                print(f"Episode {episode_cnt - start_episode + args.start_index} Success, Saved")
             else:
                 print("Episode Failed, Not Saved")
 

@@ -84,13 +84,12 @@ class PegInsertionEnv(gym.Env):
         assert len(obs["all_sensors"]) == 25
         all_data = obs["all_sensors"]
 
-        peg_2_hole_xyz = all_data[:3]
+        self.state_data = all_data[:9]
 
-        self.state_data = np.concatenate((peg_2_hole_xyz, all_data[:9]))
         if self.return_state:
             return self.state_data.copy()
         else:
-            return all_data[-9:]
+            return all_data[-9:].copy()
 
     def step(self, action):
         action = self._process_action(action)
