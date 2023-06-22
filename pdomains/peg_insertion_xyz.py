@@ -23,6 +23,12 @@ class PegInsertionEnv(gym.Env):
             robot = "SoftUR5eOblong"
         elif peg_type == "triangle":
             robot = "SoftUR5eTriangle"
+        elif peg_type == "pentagon":
+            robot = "SoftUR5ePentagon"
+        elif peg_type == "hexagon":
+            robot = "SoftUR5eHexagon"
+        elif peg_type == "round":
+            robot = "SoftUR5eRound"
         else:
             raise ValueError("Invalid peg type: {}".format(peg_type))
 
