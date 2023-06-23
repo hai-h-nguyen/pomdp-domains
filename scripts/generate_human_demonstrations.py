@@ -1,5 +1,4 @@
 from pdomains import *
-import matplotlib.pyplot as plt
 import gym
 import time
 import numpy as np
