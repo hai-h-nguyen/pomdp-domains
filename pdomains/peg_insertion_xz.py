@@ -17,12 +17,18 @@ class PegInsertionEnv(gym.Env):
         controller_config = load_controller_config(default_controller="IK_POSE")
 
         self.action_scaler = 0.02
+        if peg_type == "triangle":
+            robot = "SoftUR5eTriangle"
         if peg_type == "square":
             robot = "SoftUR5eSquare"
         elif peg_type == "oblong":
             robot = "SoftUR5eOblong"
-        elif peg_type == "triangle":
-            robot = "SoftUR5eTriangle"
+        elif peg_type == "pentagon":
+            robot = "SoftUR5ePentagon"
+        elif peg_type == "hexagon":
+            robot = "SoftUR5eHexagon"
+        elif peg_type == "round":
+            robot = "SoftUR5eRound"
         else:
             raise ValueError("Invalid peg type: {}".format(peg_type))
 
