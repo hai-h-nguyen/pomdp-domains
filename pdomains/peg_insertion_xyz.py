@@ -19,7 +19,7 @@ class PegInsertionEnv(gym.Env):
         self.action_scaler = 0.02
         if peg_type == "triangle":
             robot = "SoftUR5eTriangle"
-        if peg_type == "square":
+        elif peg_type == "square":
             robot = "SoftUR5eSquare"
         elif peg_type == "oblong":
             robot = "SoftUR5eOblong"
