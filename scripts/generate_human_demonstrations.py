@@ -36,7 +36,7 @@ parser.add_argument("--pos-z-scale", type=float, default=1.0, help="How much to 
 parser.add_argument("--rot-scale", type=float, default=0.05, help="How much to scale rotation user inputs")
 parser.add_argument("--start-index", type=int, default=0, help="Start index to name files")
 parser.add_argument("--show-action", action="store_true", help="Visualize the action space of the robot")
-parser.add_argument("--save-state", action="store_true", help="Save state files")
+parser.add_argument("--save-state", action="store_false", help="Save state files")
 parser.add_argument("--domain", type=str, help="Domain to run", default="square-state-xyz")
 
 args = parser.parse_args()
