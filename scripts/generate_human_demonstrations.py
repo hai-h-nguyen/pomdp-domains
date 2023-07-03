@@ -97,12 +97,12 @@ while True:
         terminal = True if reward > 0 else done
 
         # only buffer the data if action is non-zero or reward is positive
-        if np.linalg.norm(action) > 0 or reward > 0:
-            true_step_cnt += 1
-            episode_data.append((obs, action, next_obs, reward, terminal,
-                                 true_step_cnt, state, next_state))
-            obs = next_obs.copy()
-            state = next_state.copy()
+        # if np.linalg.norm(action) > 0 or reward > 0:
+        true_step_cnt += 1
+        episode_data.append((obs, action, next_obs, reward, terminal,
+                                true_step_cnt, state, next_state))
+        obs = next_obs.copy()
+        state = next_state.copy()
 
         if done or reward > 0:
             # only save successful episode
