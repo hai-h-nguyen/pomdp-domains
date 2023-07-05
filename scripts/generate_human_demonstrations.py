@@ -32,7 +32,7 @@ class EpisodeLogger:
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--pos-xy-scale", type=float, default=1.0, help="How much to scale position user inputs")
-parser.add_argument("--pos-z-scale", type=float, default=1.0, help="How much to scale position user inputs")
+parser.add_argument("--pos-z-scale", type=float, default=0.75, help="How much to scale position user inputs")
 parser.add_argument("--rot-scale", type=float, default=0.05, help="How much to scale rotation user inputs")
 parser.add_argument("--start-index", type=int, default=0, help="Start index to name files")
 parser.add_argument("--show-action", action="store_true", help="Visualize the action space of the robot")
