@@ -23,8 +23,6 @@ class PegInsertionEnv(gym.Env):
             robot = "SoftUR5eSquare"
         elif peg_type == "square-old":
             robot = "SoftUR5eSquareOld"
-        elif peg_type == "oblong":
-            robot = "SoftUR5eOblong"
         elif peg_type == "pentagon":
             robot = "SoftUR5ePentagon"
         elif peg_type == "hexagon":
