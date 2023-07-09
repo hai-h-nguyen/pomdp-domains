@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 
-# This is a general purpose robot interface, designed for running robot learning experiments.
-# It is self-contained and simple, allowing for observation of different robot attributes
-# (tactile sensing, cartesian state, joint state).
-# It can be easily used directly, or used inside a specific "environment".
-
 import copy
 import numpy as np, cv2
 

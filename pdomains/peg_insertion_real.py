@@ -91,6 +91,9 @@ class PegInsertionEnv(gym.Env):
         current_pose = self.ur5e.get_cartesian_state()
         desired_pose = current_pose + action
 
+        # TODO: add desired orientation here
+        breakpoint()
+
         # Send request
         self.ur5e.go_to_cartesian_pose(desired_pose, speed=self.speed_slow)
 
