@@ -4,7 +4,7 @@ import time
 import numpy as np
 
 import argparse
-from robosuite.devices import Joystick
+from pdomains.joystick import Joystick
 from pdomains.utils import EpisodeLogger
 
 
