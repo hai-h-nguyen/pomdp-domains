@@ -1,6 +1,6 @@
 import pygame
 import numpy as np
-from robosuite.utils.transform_utils import rotation_matrix
+from pdomains.utils import rotation_matrix
 
 class Cmd(object):
   def __init__(self):

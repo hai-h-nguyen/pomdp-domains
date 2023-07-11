@@ -1,0 +1,17 @@
+1. RUN docker (in every terminal later if want to access ros)
+'''
+cd ~/./ur_environment/
+./RUN-DOCKER-CONTAINER.sh
+'''
+
+2. Load the gripper using the pendant:
+- Close gradually until the peg is correctly held and then close 100%
+
+3. Launch the ros script
+'''
+roslaunch tactile_feedback_control system_bringup.launch
+'''
+
+4. Loading ans start running ROS_driver on the pendant
+
+5. Run the script (must copied into ur_environment/catkin_ws/src)

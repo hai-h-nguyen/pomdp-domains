@@ -59,7 +59,7 @@ class RobotInterface(object):
         # Killing the node would mean that the last sent velocity command keeps on being executed.
         # Instead of letting the node die via signals (ROS node signals/Ctrl+C), we stop the robot manually.
         self.tf_listener = tf.TransformListener()
-        self.fps = 5 # rospy.get_param("/align_task/freq")
+        self.fps = 10 # rospy.get_param("/align_task/freq")
         self.rate = rospy.Rate(self.fps)
 
         # Create the move_group object
@@ -75,7 +75,7 @@ class RobotInterface(object):
 
         # Subscribers for observations
         if "wrist_ft" in self.observation_options:
-            ft300topic = "/b_bot/wrench"
+            ft300topic = "/wrench"
             rospy.Subscriber(ft300topic, WrenchStamped, self.wrist_ft_callback)
             rospy.loginfo("Waiting for ft300")
             rospy.wait_for_message(ft300topic, WrenchStamped)
@@ -150,13 +150,70 @@ class RobotInterface(object):
         as a Pose message.
         """
         pose_msg = self.move_group.get_current_pose().pose
-        pose_xyz = [pose_msg.position.x,
+        pose = [pose_msg.position.x,
                 pose_msg.position.y,
-                pose_msg.position.z]
+                pose_msg.position.z,
+                pose_msg.orientation.x,
+                pose_msg.orientation.y,
+                pose_msg.orientation.z,
+                pose_msg.orientation.w]
 
-        return pose_xyz
+        return pose
 
-    def go_to_cartesian_pose(self, pose, speed=1.0, switch_controllers=True, end_effector_link=""):
+    def stop_robot(self):
+        self._publish_joint_velocity(self._zero_joints)
+
+    def _publish_joint_velocity(self, joint_vel):
+        """
+        Publishes the commanded joint velocity to the controller.
+
+        joint_vel (np.array) = the list of requested joint velocities
+        """
+        success = True
+        # if self.check_wrist_overload():
+        #   # flexwrist protection
+        #   joint_vel = copy.deepcopy(self._zero_joints)
+        #   success = False
+        #print("success",joint_vel)
+        joint_msg = Float64MultiArray() 
+        joint_msg.layout.dim.append(MultiArrayDimension())
+        joint_msg.layout.dim[0].label = '' #"joint velocity"
+        joint_msg.layout.dim[0].size = 0 #6
+        joint_msg.data = joint_vel
+        self.joint_pub.publish(joint_msg)
+        return success
+
+    def switch_controllers(self, desired = "moveit"):
+        """
+        Switch between different controller types
+        Allows switching between joint vel control and moveit planning,
+        and disabling controllers for the gripper control
+        """
+        # The possible controller options
+        joint_controller = 'joint_group_vel_controller'
+        vel_controller = 'scaled_pos_joint_traj_controller'
+
+        # Define the lists of controllers to start and stop for each method
+        # "method name" : (to_start, to_stop)
+        control_methods = {"moveit": ([vel_controller],  [joint_controller]),
+                            "joint" : ([joint_controller],[vel_controller]),
+                            "none"  : ([], [vel_controller,joint_controller])}
+
+        # Wait for the controller manager
+        # rospy.loginfo("Try to switch controller. Waiting for service")
+        rospy.wait_for_service('/controller_manager/switch_controller')
+
+        # Try to switch controllers
+        try:
+            sc = rospy.ServiceProxy('/controller_manager/switch_controller', 
+                                    SwitchController)
+            # Start and stop controllers according to the desired control method
+            sc(start_controllers=control_methods[desired][0], stop_controllers=control_methods[desired][1], strictness=1)
+            # rospy.loginfo("Switched from {} to {}".format(*control_methods[desired]))
+        except rospy.ServiceException:
+            rospy.logerr('Failed to switch controllers.')
+
+    def go_to_cartesian_pose(self, pose, speed=1.0, end_effector_link=""):
         """
         Cartesian path planning
         """
@@ -175,11 +232,11 @@ class RobotInterface(object):
             self.move_group.set_end_effector_link(end_effector_link)
             rospy.sleep(2)
 
-        if switch_controllers:
+        # if switch_controllers:
             # Switch to moveit
-            self.switch_controllers("moveit")
+            # self.switch_controllers("moveit")
         waypoints = [pose_goal]
-        print(("pose_goal",waypoints))
+        # print(("pose_goal",waypoints))
         plan, fraction = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
         plan = self.move_group.retime_trajectory(self.robot.get_current_state(), plan, speed)
 
@@ -192,6 +249,6 @@ class RobotInterface(object):
             # Restore end effector link
             self.move_group.set_end_effector_link(self._end_effector_link)
 
-        if switch_controllers:
+        # if switch_controllers:
             # Switch back to joint control
-            self.switch_controllers("joint")
+            # self.switch_controllers("joint")
