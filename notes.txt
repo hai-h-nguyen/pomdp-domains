@@ -12,6 +12,13 @@ cd ~/./ur_environment/
 roslaunch tactile_feedback_control system_bringup.launch
 '''
 
-4. Loading ans start running ROS_driver on the pendant
+4. Loading and start running ROS_driver on the pendant
+
+5. Run the filtering for F/T signals (the peg is in the air and no vibration)
+
+6. Publish the hole coordinate:
+'''
+rosrun tf static_transform_publisher 0.01 -0.522 0.117 0 0 0 base hole_coordinate 100
+'''
 
 5. Run the script (must copied into ur_environment/catkin_ws/src)

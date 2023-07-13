@@ -3,24 +3,29 @@ import gym
 from gym import spaces
 import copy
 import rospy
+import tf
 
 from pdomains.robot_utils.robot_interface import RobotInterface
+import pdomains.robot_utils.transform_utils as T
 
 import yaml
-with open('pdomains/robot_utils/params.yaml', 'r') as yml:
+with open('/root/o2ac-ur/catkin_ws/src/hai_ws/pomdp-domains/scripts/params.yaml', 'r') as yml:
     config = yaml.safe_load(yml)
 
-hole_center_pose = config["hole_center_pose"]
+HOLE_CENTER_POSE = config["hole_center_pose"]
 
-hole_radius = config["hole_radius"]
-outer_radius = config["outer_radius"]
+HOLE_RADIUS = config["hole_radius"]
+OUTER_RADIUS = config["outer_radius"]
 
-x_threshold = config["x_threshold"]
-y_threshold = config["y_threshold"]
-z_threshold = config["z_threshold"]
+X_THRES = config["x_threshold"]
+Y_THRES = config["y_threshold"]
+Z_THRES = config["z_threshold"]
+RESET_XY_THRES = config["reset_xy_threshold"]
 
-force_offsets = config["force_offsets"]
-torque_offsets = config["torque_offsets"]
+TIP2HOLE_OFFSET_Z = config["tip2hole_offset_z"]
+
+MAX_FORCE = config["max_force"]
+MAX_TORQUE = config["max_torque"]
 
 class PegInsertionEnv(gym.Env):
     """
@@ -41,15 +46,26 @@ class PegInsertionEnv(gym.Env):
         self.action_scaler = 0.02
 
         # Connect to the robot
-        observation_options = ["cartesian", "wrist_ft"]
+        observation_options = ["cartesian", "wrist_ft_filtered"]
         self.ur5e = RobotInterface(observation_options=observation_options)
 
         self.ur5e.switch_controllers("moveit")
 
-        self.speed_normal = 0.025
+        self.speed_normal = 0.05
         self.speed_slow   = 0.005
 
         self.episode_cnt = 0
+
+        # Forces and torques are defined at the tool0_control coordinate
+        listener = tf.TransformListener()
+        listener.waitForTransform('/hole_coordinate','/tool0_controller', rospy.Time(), rospy.Duration(4.0))
+        (trans, rot) = listener.lookupTransform('/hole_coordinate', '/tool0_controller', rospy.Time(0))
+        self.tool0_in_hole = T.pose2mat((trans, rot))
+
+        # Positions are defined at the world coordinate
+        listener.waitForTransform('/hole_coordinate','/world', rospy.Time(), rospy.Duration(4.0))
+        (trans, rot) = listener.lookupTransform('/hole_coordinate', '/world', rospy.Time(0))
+        self.world_in_hole = T.pose2mat((trans, rot))
 
     def reset(self):
         """
@@ -60,32 +76,32 @@ class PegInsertionEnv(gym.Env):
 
         self.episode_cnt = 0
 
-        # print("Go to right above hole center")
-        # self.ur5e.go_to_cartesian_pose(hole_center_pose, speed=self.speed_normal)
+        print("Go to right above hole center using the same height")
+        current_height = self.ur5e.get_cartesian_state()[2]
+        temp_center_hose = np.copy(HOLE_CENTER_POSE)
+        temp_center_hose[2] = current_height
+        self.ur5e.go_to_cartesian_pose(temp_center_hose, speed=self.speed_normal)
 
-        # print("Go to random position")
-        # random_pose = self._randomize_starting_pos(hole_center_pose)
-        # self.ur5e.go_to_cartesian_pose(random_pose, speed=self.speed_slow)
+        print("Go to right above hole center using the hole height")
+        self.ur5e.go_to_cartesian_pose(HOLE_CENTER_POSE, speed=self.speed_normal)        
 
-        # print("Go down to touch the hole plane")
+        print("Go to random position")
+        random_pose = self._randomize_starting_pos(HOLE_CENTER_POSE)
+        self.ur5e.go_to_cartesian_pose(random_pose, speed=self.speed_slow)
 
-        # print("Go to a random position")
-        # TODO: randomize the start pose
-        # random_pose = hole_center_pose
-        # self.ur5e.go_to_cartesian_pose(random_pose, speed=self.speed_slow)
-
-        return self._process_obs()
+        obs, _, _ = self._process_obs()
+        return obs
 
     def _randomize_starting_pos(self, hole_pose):
         center_x, center_y = hole_pose[0], hole_pose[1]
 
         random_angle = 2*np.pi*np.random.rand()
-        random_radius = hole_radius + np.random.rand()*(outer_radius - hole_radius)
+        random_radius = HOLE_RADIUS + np.random.rand()*(OUTER_RADIUS - HOLE_RADIUS)
 
         random_x = center_x + random_radius * np.sin(random_angle)
         random_y = center_y + random_radius * np.cos(random_angle)
 
-        ret = [random_x, random_y] + hole_center_pose[2:]
+        ret = [random_x, random_y] + HOLE_CENTER_POSE[2:]
 
         return ret
 
@@ -95,23 +111,74 @@ class PegInsertionEnv(gym.Env):
         Need to convert all into the hole coordinate
         """
         observations = []
+        terminate = False
+        success = False
 
-        arm_tip_xyz = self.ur5e.get_cartesian_state()
+        arm_tip_in_world = self.ur5e.get_cartesian_state()
+        arm_tip_xyz = arm_tip_in_world[:3]
+        arm_tip_rot = arm_tip_in_world[3:]
+        arm_tip_pose_in_world = T.pose2mat((arm_tip_xyz, arm_tip_rot))
+        arm_tip_pose_in_hole = T.pose_in_A_to_pose_in_B(arm_tip_pose_in_world, self.world_in_hole)
+        arm_tip_rel_pos, arm_tip_rel_quat = T.mat2pose(arm_tip_pose_in_hole)
 
-        observations.extend(arm_tip_xyz)
+        arm_tip_rel_pos[2] -= TIP2HOLE_OFFSET_Z
 
-        f_x, f_y, f_z, t_x, t_y, t_z = self.ur5e.get_wrist_ft(averaged_number=15)
+        norm_arm_tip_rel_pos = np.array(arm_tip_rel_pos) / RESET_XY_THRES
+        observations.extend(list(norm_arm_tip_rel_pos))
 
-        print(f_x, f_y, f_z)
-        print(t_x, t_y, t_z)
-        print("-------")
+        # check if success
+        x_cond = abs(arm_tip_rel_pos[0]) <= X_THRES
+        y_cond = abs(arm_tip_rel_pos[1]) <= Y_THRES
+        z_cond = arm_tip_rel_pos[2] < -Z_THRES
 
-        observations.extend([f_x, f_y, f_z])
-        observations.extend([t_x, t_y, t_z])
+        positional_success = x_cond and y_cond and z_cond
 
-        # TODO: convert to hole coordinate
+        # check terminate early if going too far
+        x_cond = abs(arm_tip_rel_pos[0]) > RESET_XY_THRES
+        y_cond = abs(arm_tip_rel_pos[1]) > RESET_XY_THRES
 
-        return copy.deepcopy(observations)
+        terminate = x_cond or y_cond
+        if terminate:
+            print(f"Terminate due to moving away > x:{x_cond} y:{y_cond}")
+
+        f_x, f_y, f_z, t_x, t_y, t_z = self.ur5e.get_wrist_ft_filtered()
+        forces = np.array([f_x, f_y, f_z])
+        torques = np.array([t_x, t_y, t_z])
+
+        assert self.tool0_in_hole is not None
+        new_forces, new_torques = T.force_in_A_to_force_in_B(forces, torques, self.tool0_in_hole)
+
+        # check if force on Z is too much
+        if not terminate:
+            terminate = new_forces[2] > float(MAX_FORCE * 0.75)
+            if terminate:
+                print(f"Terminate due to force z > {float(MAX_FORCE * 0.75)}")
+                print("Go up to relax")
+                current_pose = self.ur5e.get_cartesian_state()
+                current_pose[2] += 0.02
+                self.ur5e.go_to_cartesian_pose(current_pose, speed=self.speed_normal)
+
+        fx_cond = abs(new_forces[0]) < 1.5
+        fy_cond = abs(new_forces[1]) < 1.5
+        fz_cond = new_forces[2] > 5.0
+
+        force_success = fx_cond and fy_cond and fz_cond
+        success = positional_success and force_success
+
+        # if not success:
+            # print(new_forces, arm_tip_rel_pos)
+        if success:
+            print(f"Succeed!w {new_forces} {arm_tip_rel_pos}")
+
+        norm_new_forces = np.array(new_forces) / MAX_FORCE
+        norm_new_torques = np.array(new_torques) / MAX_TORQUE
+
+        observations.extend(list(norm_new_forces))
+        observations.extend(list(norm_new_torques))
+
+        observations = np.array(observations)
+
+        return copy.deepcopy(observations), terminate, success
 
     def step(self, action):
         """
@@ -131,35 +198,14 @@ class PegInsertionEnv(gym.Env):
         # Send request
         self.ur5e.go_to_cartesian_pose(desired_pose, speed=self.speed_normal)
 
-        rew = self._reward()
-        done = self._done()
-
-        if rew > 0:
-            done = True
-
         self.episode_cnt += 1
 
-        return self._process_obs(), rew, done, {}
+        obs, terminate, success = self._process_obs()
 
-    def _reward(self):
-        current_pos = self.ur5e.get_cartesian_state()
-        current_pos_x = current_pos[0]
-        current_pos_y = current_pos[1]
-        current_pos_z = current_pos[2]
+        done = terminate or success
+        rew = float(success)
 
-        # print(abs(current_pos_x - hole_center_pose[0]))
-        # print(abs(current_pos_y - hole_center_pose[1]))
-        # print(current_pos_z - hole_center_pose[2])
-        # print("--------------------")
-
-        x_cond = abs(current_pos_x - hole_center_pose[0]) <= x_threshold
-        y_cond = abs(current_pos_y - hole_center_pose[1]) <= y_threshold
-        z_cond = current_pos_z - hole_center_pose[2] < -z_threshold
-
-        return x_cond and y_cond and z_cond
-
-    def _done(self):
-        return False
+        return obs, rew, done, {}
 
     def close(self):
         pass

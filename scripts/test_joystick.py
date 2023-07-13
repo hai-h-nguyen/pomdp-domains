@@ -28,10 +28,13 @@ device = Joystick(pos_xy_scale=args.pos_xy_scale,
 
 env = gym.make("peg-insertion-round-real-xyz-v0")
 
-while True:
-    obs = env.reset()
+device.start_control()
 
-    device.start_control()
+step_cnt = 0
+
+while True:
+    step_cnt = 0
+    obs = env.reset()
 
     while True:
         action_dict = device.get_controller_state()
@@ -43,11 +46,15 @@ while True:
 
         reset = action_dict["reset"]
 
+        step_cnt += 1
+
         if reset:
+            print("Joystick Reset")
             break
 
         obs, reward, done, info = env.step(action)
 
-        if reward > 0:
-            print("Suceed!")
+        if reward or done:
+            if reward > 0:
+                print(f"Success {step_cnt}")
             break

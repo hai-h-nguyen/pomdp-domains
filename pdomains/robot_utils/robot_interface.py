@@ -70,19 +70,30 @@ class RobotInterface(object):
 
         wrench_l = 100
         self.wrench_data = deque([WrenchStamped() for _ in range(wrench_l)], wrench_l)
+        self.wrench_data_filtered = deque([WrenchStamped() for _ in range(wrench_l)], wrench_l)
         self.wrist_ft = [0.0]*6
         self.pose = None
 
         # Subscribers for observations
         if "wrist_ft" in self.observation_options:
-            ft300topic = "/wrench"
-            rospy.Subscriber(ft300topic, WrenchStamped, self.wrist_ft_callback)
-            rospy.loginfo("Waiting for ft300")
-            rospy.wait_for_message(ft300topic, WrenchStamped)
-            rospy.loginfo("Connected to ft300.")
+            fttopic = "/wrench"
+            rospy.Subscriber(fttopic, WrenchStamped, self.wrist_ft_callback)
+            rospy.loginfo("Waiting for ft")
+            rospy.wait_for_message(fttopic, WrenchStamped)
+            rospy.loginfo("Connected to ft sensor.")
+
+        if "wrist_ft_filtered" in self.observation_options:
+            ft_topic_filtered = "/wrench/filtered"
+            rospy.Subscriber(ft_topic_filtered, WrenchStamped, self.wrist_ft_filtered_callback)
+            rospy.loginfo("Waiting for ft filtered")
+            rospy.wait_for_message(ft_topic_filtered, WrenchStamped)
+            rospy.loginfo("Connected to ft filtered.")
 
     def wrist_ft_callback(self, msg):
         self.wrench_data.append(msg)
+
+    def wrist_ft_filtered_callback(self, msg):
+        self.wrench_data_filtered.append(msg)
 
     def get_wrist_ft_averaged(self, number=15):
         if number == 0: # return last data
@@ -111,6 +122,12 @@ class RobotInterface(object):
 
     def get_wrist_ft(self, averaged_number=0):
         return self.get_wrist_ft_averaged(number=averaged_number)
+
+    def get_wrist_ft_filtered(self):
+        data = self.wrench_data_filtered[-1]
+        force = xyz_to_array(data.wrench.force)
+        torque = xyz_to_array(data.wrench.torque)
+        return force + torque
 
     def joint_state_callback(self, msg):
         self.joint_pos = list(msg.position)
