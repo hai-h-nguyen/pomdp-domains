@@ -151,7 +151,6 @@ class FTsensor(object):
 def main():
     """ Main function to be run. """
     parser = argparse.ArgumentParser(description='Filter FT signal')
-    parser.add_argument('-ns', '--namespace', type=str, help='Namespace', required=False)
     parser.add_argument('-t', '--ft_topic', type=str, help='FT sensor data topic', required=True)
     parser.add_argument('-ot', '--out_topic', type=str, help='Topic where filtered data will be published')
     parser.add_argument('-z', '--zero', action='store_true', help='Zero FT signal')
