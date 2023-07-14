@@ -26,6 +26,8 @@ TIP2HOLE_OFFSET_Z = config["tip2hole_offset_z"]
 
 MAX_FORCE = config["max_force"]
 MAX_TORQUE = config["max_torque"]
+RESET_FORCE_Z_THRES = config["reset_fz_threshold"]
+
 
 class PegInsertionEnv(gym.Env):
     def __init__(self):
@@ -142,9 +144,9 @@ class PegInsertionEnv(gym.Env):
 
         # check if force on Z is too much
         if not terminate:
-            terminate = forces_in_hole[2] > float(MAX_FORCE * 0.75)
+            terminate = forces_in_hole[2] > RESET_FORCE_Z_THRES
             if terminate:
-                print(f"Terminate due to force z > {float(MAX_FORCE * 0.75)}")
+                print(f"Terminate due to force {forces_in_hole[2]} > {RESET_FORCE_Z_THRES}")
                 print("Go up to relax")
                 current_pose = self.ur5e.get_cartesian_state()
                 current_pose[2] += 0.02
