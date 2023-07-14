@@ -5,7 +5,7 @@ y_threshold: 0.01
 z_threshold: 0.0
 tip2hole_offset_z: 0.27600932
 max_force: 50
-reset_fz_threshold: 45
+reset_fz_threshold: 35
 max_torque: 10
 reset_xy_threshold: 0.06
 reset_z_threshold: 0.06

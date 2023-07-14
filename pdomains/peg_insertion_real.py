@@ -42,7 +42,7 @@ class PegInsertionEnv(gym.Env):
             shape=(9, ), low=-np.inf, high=np.inf, dtype=np.float32
         )
 
-        self.action_scaler = np.array([0.02, 0.02, 0.01])
+        self.action_scaler = np.array([0.02, 0.02, 0.005])
 
         # Connect to the robot
         observation_options = ["wrist_ft_filtered"]
@@ -76,6 +76,12 @@ class PegInsertionEnv(gym.Env):
         Go to a random position that touches the hole (to reduce the vibration)
         """
         self.step_cnt = 0
+
+        if self._is_force_z_large():
+            print("Force z too large, go up to relax")
+            current_pose = self.ur5e.get_cartesian_state()
+            current_pose[2] += 0.02
+            self.ur5e.go_to_cartesian_pose(current_pose, speed=self.speed_normal)
 
         print("Go to right above hole center using the current height")
         current_height = self.ur5e.get_cartesian_state()[2]
@@ -155,14 +161,8 @@ class PegInsertionEnv(gym.Env):
 
         # check if force on Z is too much
         if not terminate:
-            terminate = forces_in_hole[2] > RESET_FORCE_Z_THRES
-            if terminate:
-                print(f"Terminate due to force {forces_in_hole[2]} > {RESET_FORCE_Z_THRES}")
-                print("Go up to relax")
-                force_penalty = -1.0*(forces_in_hole[2] - RESET_FORCE_Z_THRES)
-                current_pose = self.ur5e.get_cartesian_state()
-                current_pose[2] += 0.02
-                self.ur5e.go_to_cartesian_pose(current_pose, speed=self.speed_normal)
+            terminate = abs(forces_in_hole[2]) > RESET_FORCE_Z_THRES
+
 
         fx_cond = abs(forces_in_hole[0]) < 1.5
         fy_cond = abs(forces_in_hole[1]) < 1.5
@@ -204,6 +204,10 @@ class PegInsertionEnv(gym.Env):
         # Clip the action
         action = np.clip(action, -1.0, 1.0) * self.action_scaler
         pad_action = np.zeros(7)  # delta_xyz, quat_orientation
+        
+        if self._is_force_z_large():
+            print("Force z too large, set delta_z = 0")
+            action[2] = 0.0
 
         pad_action[:3] = action
 
@@ -232,3 +236,20 @@ class PegInsertionEnv(gym.Env):
 
     def render(self, mode='human'):
         pass
+
+    def _is_force_z_large(self):
+        """
+        If the force_z is current large than a threshold and the agent is
+        trying to go down more, ignore the request on the height
+        the environment will be reset later
+        """
+        f_x, f_y, f_z, t_x, t_y, t_z = self.ur5e.get_wrist_ft_filtered()
+        forces_in_tool0 = np.array([f_x, f_y, f_z])
+        torques_in_tool0 = np.array([t_x, t_y, t_z])
+
+        forces_in_hole, torques_in_hole = T.force_in_A_to_force_in_B(forces_in_tool0, torques_in_tool0, self.tool0_in_hole)
+
+        # check if force on Z is too much
+        force_z_large = abs(forces_in_hole[2]) > RESET_FORCE_Z_THRES
+
+        return force_z_large
