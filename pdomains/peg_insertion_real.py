@@ -4,9 +4,11 @@ from gym import spaces
 import copy
 import rospy
 import tf
+import cv2
 
 from pdomains.robot_utils.robot_interface import RobotInterface
 import pdomains.robot_utils.transform_utils as T
+from pdomains.robot_utils.red_detector import is_detect_red
 
 import yaml
 with open('/root/o2ac-ur/catkin_ws/src/hai_ws/pomdp-domains/scripts/params.yaml', 'r') as yml:
@@ -40,10 +42,10 @@ class PegInsertionEnv(gym.Env):
             shape=(9, ), low=-np.inf, high=np.inf, dtype=np.float32
         )
 
-        self.action_scaler = 0.02
+        self.action_scaler = np.array([0.02, 0.02, 0.01])
 
         # Connect to the robot
-        observation_options = ["cartesian", "wrist_ft_filtered"]
+        observation_options = ["wrist_ft_filtered"]
         self.ur5e = RobotInterface(observation_options=observation_options)
 
         self.ur5e.switch_controllers("moveit")
@@ -65,6 +67,10 @@ class PegInsertionEnv(gym.Env):
         (trans, rot) = listener.lookupTransform(target_coordinate, '/world', rospy.Time(0))
         self.world_in_hole = T.pose2mat((trans, rot))
 
+        self.print_ft_once = False
+
+        self.camera = cv2.VideoCapture(0)
+
     def reset(self):
         """
         Go to a random position that touches the hole (to reduce the vibration)
@@ -84,7 +90,7 @@ class PegInsertionEnv(gym.Env):
         random_pose = self._randomize_starting_pos(HOLE_CENTER_POSE)
         self.ur5e.go_to_cartesian_pose(random_pose, speed=self.speed_slow)
 
-        obs, _, _ = self._process_obs()
+        obs, _, _, _ = self._process_obs()
         return obs
 
     def _randomize_starting_pos(self, hole_pose):
@@ -104,6 +110,7 @@ class PegInsertionEnv(gym.Env):
         observations = []
         terminate = False
         success = False
+        force_penalty = 0.0
 
         arm_tip_in_world = self.ur5e.get_cartesian_state()
         arm_tip_xyz = arm_tip_in_world[:3]
@@ -140,7 +147,11 @@ class PegInsertionEnv(gym.Env):
 
         forces_in_hole, torques_in_hole = T.force_in_A_to_force_in_B(forces_in_tool0, torques_in_tool0, self.tool0_in_hole)
 
-        # print(forces_in_hole)
+        # print("F/T", forces_in_hole, torques_in_hole)
+
+        if not self.print_ft_once:
+            print("F/T", forces_in_hole, torques_in_hole)
+            self.print_ft_once = True
 
         # check if force on Z is too much
         if not terminate:
@@ -148,6 +159,7 @@ class PegInsertionEnv(gym.Env):
             if terminate:
                 print(f"Terminate due to force {forces_in_hole[2]} > {RESET_FORCE_Z_THRES}")
                 print("Go up to relax")
+                force_penalty = -1.0*(forces_in_hole[2] - RESET_FORCE_Z_THRES)
                 current_pose = self.ur5e.get_cartesian_state()
                 current_pose[2] += 0.02
                 self.ur5e.go_to_cartesian_pose(current_pose, speed=self.speed_normal)
@@ -157,12 +169,22 @@ class PegInsertionEnv(gym.Env):
         fz_cond = forces_in_hole[2] > 5.0
 
         force_success = fx_cond and fy_cond and fz_cond
-        success = positional_success and force_success
+
+        tx_cond = abs(torques_in_hole[0]) < 0.5
+        ty_cond = abs(torques_in_hole[1]) < 0.5
+        tz_cond = abs(torques_in_hole[2]) < 0.5
+
+        torque_success = tx_cond and ty_cond and tz_cond
+
+        success = positional_success and force_success and torque_success
+
+        if success:
+            success = success and (not is_detect_red(self.camera))
 
         # if not success:
             # print(new_forces, arm_tip_rel_pos)
         if success:
-            print(f"Succeed!w {forces_in_hole} {arm_tip_pos_in_hole}")
+            print(f"Succeed! w/ {forces_in_hole} {arm_tip_pos_in_hole}")
 
         norm_forces_in_hole = np.array(forces_in_hole) / MAX_FORCE
         norm_torques_in_hole = np.array(torques_in_hole) / MAX_TORQUE
@@ -170,9 +192,9 @@ class PegInsertionEnv(gym.Env):
         observations.extend(list(norm_forces_in_hole))
         observations.extend(list(norm_torques_in_hole))
 
-        observations = np.array(observations)
+        observations = np.array(observations).astype(np.float32)
 
-        return copy.deepcopy(observations), terminate, success
+        return copy.deepcopy(observations), terminate, success, force_penalty
 
     def step(self, action):
         """
@@ -194,7 +216,7 @@ class PegInsertionEnv(gym.Env):
 
         self.step_cnt += 1
 
-        obs, terminate, success = self._process_obs()
+        obs, terminate, success, force_penalty = self._process_obs()
 
         done = terminate or success
         rew = float(success)

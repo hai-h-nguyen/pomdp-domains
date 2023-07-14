@@ -66,5 +66,5 @@ while True:
             if reward > 0:
                 data_reader.log_episode(episode_data)
                 episode_cnt += 1
-                print(f"Saved episode {episode_cnt + args.start_index}, len {episode_cnt}")
+                print(f"Saved episode {episode_cnt + args.start_index}, len {step_cnt}")
             break
