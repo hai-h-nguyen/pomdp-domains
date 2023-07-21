@@ -91,6 +91,15 @@ class PegInsertionEnv(gym.Env):
         else:
             return all_data[-9:].copy()
 
+    def _calculate_penalty(self, obs):
+        all_data = obs["all_sensors"]
+        obs = all_data[:9]
+        raw_fz = obs[5] * 50.0
+        if abs(raw_fz) >= 15.0:
+            return -1.0
+        else:
+            return 0.0
+
     def step(self, action):
         action = self._process_action(action)
         obs, reward, done, info = self.core_env.step(action)
@@ -98,6 +107,7 @@ class PegInsertionEnv(gym.Env):
         info = {}
 
         info["success"] = reward > 0.0
+        penalty = self._calculate_penalty
 
         if reward > 0.0 or obs["all_sensors"][-10]:
             done = True
@@ -105,7 +115,7 @@ class PegInsertionEnv(gym.Env):
         if self.rendering:
             self.core_env.render()
 
-        return self._process_obs(obs), reward, done, info
+        return self._process_obs(obs), reward + penalty, done, info
 
     def render(self, mode='human'):
         self.core_env.render()
