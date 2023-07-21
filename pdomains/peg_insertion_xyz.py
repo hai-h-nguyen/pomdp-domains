@@ -107,7 +107,7 @@ class PegInsertionEnv(gym.Env):
         info = {}
 
         info["success"] = reward > 0.0
-        penalty = self._calculate_penalty
+        penalty = self._calculate_penalty(obs)
 
         if reward > 0.0 or obs["all_sensors"][-10]:
             done = True
