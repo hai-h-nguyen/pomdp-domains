@@ -95,8 +95,8 @@ class PegInsertionEnv(gym.Env):
         all_data = obs["all_sensors"]
         obs = all_data[:9]
         raw_fz = obs[5] * 50.0
-        if abs(raw_fz) >= 15.0:
-            return -1.0
+        if abs(raw_fz) >= 25.0:
+            return -0.1
         else:
             return 0.0
 
