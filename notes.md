@@ -17,6 +17,9 @@ roslaunch tactile_feedback_control system_bringup.launch
 5. Run the filtering for F/T signals (the peg is in the air and no vibration)
 ```python pdomains/robot_utils/ft_filter.py -t "wrench" -z```
 
+6. Start the red detector node
+
+
 6. Publish the hole coordinate:
 ```
 rosrun tf static_transform_publisher 0.01 -0.522 0.117 0 0 0 base hole_coordinate 100

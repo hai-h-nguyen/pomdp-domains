@@ -15,6 +15,7 @@ from geometry_msgs.msg import WrenchStamped
 from sensor_msgs.msg import JointState
 from tf.transformations import euler_from_quaternion
 from collections import deque
+from std_msgs.msg import String
 
 import time # debugging
 import actionlib
@@ -74,6 +75,8 @@ class RobotInterface(object):
         self.wrist_ft = [0.0]*6
         self.pose = None
 
+        self.detect_red = True
+
         # Subscribers for observations
         if "wrist_ft" in self.observation_options:
             fttopic = "/wrench"
@@ -89,8 +92,18 @@ class RobotInterface(object):
             rospy.wait_for_message(ft_topic_filtered, WrenchStamped)
             rospy.loginfo("Connected to ft filtered.")
 
+        if "detector" in self.observation_options:
+            topic_detector = "/detector"
+            rospy.Subscriber(topic_detector, String, self.detector_callback)
+            rospy.loginfo("Waiting for detector")
+            rospy.wait_for_message(topic_detector, String)
+            rospy.loginfo("Connected to detector.")
+
     def wrist_ft_callback(self, msg):
         self.wrench_data.append(msg)
+
+    def detector_callback(self, msg):
+        self.detect_red = (msg.data == "True")
 
     def wrist_ft_filtered_callback(self, msg):
         self.wrench_data_filtered.append(msg)
@@ -122,6 +135,9 @@ class RobotInterface(object):
 
     def get_wrist_ft(self, averaged_number=0):
         return self.get_wrist_ft_averaged(number=averaged_number)
+
+    def is_detect_red(self):
+        return self.detect_red
 
     def get_wrist_ft_filtered(self):
         data = self.wrench_data_filtered[-1]

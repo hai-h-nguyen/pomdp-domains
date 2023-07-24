@@ -41,7 +41,7 @@ class FTsensor(object):
 
     def __init__(self, in_topic, out_topic=None,
                  sampling_frequency=500, cutoff=50,
-                 order=2, data_window=200, timeout=3.0,
+                 order=2, data_window=100, timeout=3.0,
                  republish=False):
 
         self.enable_publish = republish
@@ -125,6 +125,7 @@ class FTsensor(object):
     def update_wrench_offset(self):
         current_wrench = self.get_filtered_wrench()
         if current_wrench is not None:
+            print(f"Update new offsets from {self.wrench_offset} to {current_wrench}")
             self.wrench_offset = current_wrench
             if self.wrench_offset is not None:
                 rospy.set_param('%sft_offset' % self.out_topic, self.wrench_offset.tolist())

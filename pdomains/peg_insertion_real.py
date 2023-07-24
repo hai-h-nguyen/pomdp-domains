@@ -4,11 +4,11 @@ from gym import spaces
 import copy
 import rospy
 import tf
-import cv2
 
 from pdomains.robot_utils.robot_interface import RobotInterface
 import pdomains.robot_utils.transform_utils as T
-from pdomains.robot_utils.red_detector import is_detect_red
+
+from std_srvs.srv import Empty
 
 import yaml
 with open('/root/o2ac-ur/catkin_ws/src/hai_ws/pomdp-domains/scripts/params.yaml', 'r') as yml:
@@ -26,8 +26,8 @@ RESET_XY_THRES = config["reset_xy_threshold"]
 
 TIP2HOLE_OFFSET_Z = config["tip2hole_offset_z"]
 
-MAX_FORCE = config["max_force"]
-MAX_TORQUE = config["max_torque"]
+FORCE_NORMALIZER = config["force_normalizer"]
+TORQUE_NORMALIZER = config["torque_normalizer"]
 RESET_FORCE_Z_THRES = config["reset_fz_threshold"]
 
 
@@ -42,18 +42,20 @@ class PegInsertionEnv(gym.Env):
             shape=(9, ), low=-np.inf, high=np.inf, dtype=np.float32
         )
 
-        self.action_scaler = np.array([0.02, 0.02, 0.005])
+        self.action_scaler = np.array([0.01, 0.01, 0.0025])
 
         # Connect to the robot
-        observation_options = ["wrist_ft_filtered"]
+        observation_options = ["wrist_ft_filtered", "detector"]
         self.ur5e = RobotInterface(observation_options=observation_options)
 
         self.ur5e.switch_controllers("moveit")
 
-        self.speed_normal = 0.05
+        self.speed_normal = 0.01
         self.speed_slow   = 0.005
 
         self.step_cnt = 0
+
+        self.zero_ft_serv = rospy.ServiceProxy("/wrench/filtered/zero_ftsensor", Empty)
 
         # Forces and torques are defined at the tool0_control coordinate
         target_coordinate = '/hole_coordinate'
@@ -69,8 +71,6 @@ class PegInsertionEnv(gym.Env):
 
         self.print_ft_once = False
 
-        self.camera = cv2.VideoCapture(0)
-
     def reset(self):
         """
         Go to a random position that touches the hole (to reduce the vibration)
@@ -78,7 +78,7 @@ class PegInsertionEnv(gym.Env):
         self.step_cnt = 0
 
         if self._is_force_z_large():
-            print("Force z too large, go up to relax")
+            print("Go up to relax")
             current_pose = self.ur5e.get_cartesian_state()
             current_pose[2] += 0.02
             self.ur5e.go_to_cartesian_pose(current_pose, speed=self.speed_normal)
@@ -90,7 +90,12 @@ class PegInsertionEnv(gym.Env):
         self.ur5e.go_to_cartesian_pose(temp_center_hose, speed=self.speed_normal)
 
         print("Go to hole center using the hole height")
-        self.ur5e.go_to_cartesian_pose(HOLE_CENTER_POSE, speed=self.speed_normal)        
+        self.ur5e.go_to_cartesian_pose(HOLE_CENTER_POSE, speed=self.speed_normal)
+
+        print("Call a service to update the F/T offsets")
+        rospy.wait_for_service("/wrench/filtered/zero_ftsensor")
+        self.zero_ft_serv()
+        self.print_ft_once = False
 
         print("Go to random position")
         random_pose = self._randomize_starting_pos(HOLE_CENTER_POSE)
@@ -108,7 +113,7 @@ class PegInsertionEnv(gym.Env):
 
         return [random_x, random_y] + HOLE_CENTER_POSE[2:]
 
-    def _process_obs(self):
+    def _process_obs(self, action=0.0):
         """
         observation include: arm_tip_xyz, force_xyz, torque_xyz
         in the hole coordinate
@@ -162,32 +167,34 @@ class PegInsertionEnv(gym.Env):
         # check if force on Z is too much
         if not terminate:
             terminate = abs(forces_in_hole[2]) > RESET_FORCE_Z_THRES
+        
+        if forces_in_hole[2] >= 10.0:
+            force_penalty += -0.01
 
+        # fx_cond = abs(forces_in_hole[0]) < 1.5
+        # fy_cond = abs(forces_in_hole[1]) < 1.5
+        # fz_cond = forces_in_hole[2] > 5.0
 
-        fx_cond = abs(forces_in_hole[0]) < 1.5
-        fy_cond = abs(forces_in_hole[1]) < 1.5
-        fz_cond = forces_in_hole[2] > 5.0
+        # force_success = fx_cond and fy_cond and fz_cond
 
-        force_success = fx_cond and fy_cond and fz_cond
+        # tx_cond = abs(torques_in_hole[0]) < 0.5
+        # ty_cond = abs(torques_in_hole[1]) < 0.5
+        # tz_cond = abs(torques_in_hole[2]) < 0.5
 
-        tx_cond = abs(torques_in_hole[0]) < 0.5
-        ty_cond = abs(torques_in_hole[1]) < 0.5
-        tz_cond = abs(torques_in_hole[2]) < 0.5
-
-        torque_success = tx_cond and ty_cond and tz_cond
-
-        success = positional_success and force_success and torque_success
+        # torque_success = tx_cond and ty_cond and tz_cond
+        success = positional_success
 
         if success:
-            success = success and (not is_detect_red(self.camera))
+            visual_success = not self.ur5e.is_detect_red()
+            success = success and visual_success
 
-        # if not success:
-            # print(new_forces, arm_tip_rel_pos)
         if success:
-            print(f"Succeed! w/ {forces_in_hole} {arm_tip_pos_in_hole}")
+            print(f"Succeed! w/ {forces_in_hole} {arm_tip_pos_in_hole} {torques_in_hole}")
+        else:
+            print(self.step_cnt, action, arm_tip_pos_in_hole, forces_in_hole, torques_in_hole)
 
-        norm_forces_in_hole = np.array(forces_in_hole) / MAX_FORCE
-        norm_torques_in_hole = np.array(torques_in_hole) / MAX_TORQUE
+        norm_forces_in_hole = np.array(forces_in_hole) / FORCE_NORMALIZER
+        norm_torques_in_hole = np.array(torques_in_hole) / TORQUE_NORMALIZER
 
         observations.extend(list(norm_forces_in_hole))
         observations.extend(list(norm_torques_in_hole))
@@ -220,16 +227,16 @@ class PegInsertionEnv(gym.Env):
 
         self.step_cnt += 1
 
-        obs, terminate, success, force_penalty = self._process_obs()
+        obs, early_terminate, success, force_penalty = self._process_obs(action)
 
-        done = terminate or success
-        rew = float(success)
+        done = early_terminate or success
+        rew = float(success) + force_penalty
 
         info = {}
 
         info["success"] = success
 
-        return obs, rew, done, {}
+        return obs, rew, done, info
 
     def close(self):
         pass
@@ -251,5 +258,8 @@ class PegInsertionEnv(gym.Env):
 
         # check if force on Z is too much
         force_z_large = abs(forces_in_hole[2]) > RESET_FORCE_Z_THRES
+
+        if force_z_large:
+            print(f"Force Z too large {forces_in_hole[2]} > {RESET_FORCE_Z_THRES}")
 
         return force_z_large

@@ -1,24 +1,32 @@
-# Python code for Multiple Color Detection
-
-
-import numpy as np
+#!/usr/bin/env python
+# license removed for brevity
+import rospy
+from std_msgs.msg import String
 import cv2
+import numpy as np
 
+# Capturing video through webcam
+camera = cv2.VideoCapture(0)
 
-def is_detect_red(camera, num_frames=5):
+num_frames = 10
 
-    # Start a while loop
-    for _ in range(num_frames):
+def talker():
+    pub = rospy.Publisher('detector', String, queue_size=10)
+    rospy.init_node('red_detector', anonymous=True)
+    rate = rospy.Rate(20) # 10hz
+    while not rospy.is_shutdown():
         
-        # Reading the video from the
-        # webcam in image frames
-        ret, imageFrame = camera.read()
+        num_positives = 0
+        for i in range(num_frames):
+            
+            # Reading the video from the
+            # webcam in image frames
+            _, imageFrame = camera.read()
 
-        # Convert the imageFrame in
-        # BGR(RGB color space) to
-        # HSV(hue-saturation-value)
-        # color space
-        if ret:
+            # Convert the imageFrame in
+            # BGR(RGB color space) to
+            # HSV(hue-saturation-value)
+            # color space
             hsvFrame = cv2.cvtColor(imageFrame, cv2.COLOR_BGR2HSV)
 
             # Set range for red color and
@@ -46,11 +54,22 @@ def is_detect_red(camera, num_frames=5):
             for pic, contour in enumerate(contours):
                 area = cv2.contourArea(contour)
                 if(area > 300):
-                    return True
+                    num_positives += 1
 
-    return False
+        if num_positives >= int(0.8 * num_frames):
+            detect = True
+        else:
+            detect = False
 
-if __name__ == "__main__":
-    # Capturing video through webcam
-    camera = cv2.VideoCapture(0)
-    print(is_detect_red(camera))
+        print(num_positives)
+        detect_str = f"{detect}"
+        if not detect:
+            rospy.loginfo(detect_str)
+        pub.publish(detect_str)
+        rate.sleep()
+
+if __name__ == '__main__':
+    try:
+        talker()
+    except rospy.ROSInterruptException:
+        pass
