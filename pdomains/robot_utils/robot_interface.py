@@ -274,7 +274,7 @@ class RobotInterface(object):
         plan = self.move_group.retime_trajectory(self.robot.get_current_state(), plan, speed)
 
         self.move_group.execute(plan, wait=True)
-        rospy.sleep(2)
+        # rospy.sleep(2)
         self.move_group.stop()
         self.move_group.clear_pose_targets()
 

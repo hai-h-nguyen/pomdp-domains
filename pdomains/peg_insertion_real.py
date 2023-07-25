@@ -23,6 +23,7 @@ X_THRES = config["x_threshold"]
 Y_THRES = config["y_threshold"]
 Z_THRES = config["z_threshold"]
 RESET_XY_THRES = config["reset_xy_threshold"]
+RESET_Z_THRES = config["reset_z_threshold"]
 
 TIP2HOLE_OFFSET_Z = config["tip2hole_offset_z"]
 
@@ -121,7 +122,7 @@ class PegInsertionEnv(gym.Env):
         observations = []
         terminate = False
         success = False
-        force_penalty = 0.0
+        penalty = 0.0
 
         arm_tip_in_world = self.ur5e.get_cartesian_state()
         arm_tip_xyz = arm_tip_in_world[:3]
@@ -147,10 +148,12 @@ class PegInsertionEnv(gym.Env):
         # check terminate early if going too far
         x_cond = abs(arm_tip_pos_in_hole[0]) > RESET_XY_THRES
         y_cond = abs(arm_tip_pos_in_hole[1]) > RESET_XY_THRES
+        z_cond = abs(arm_tip_pos_in_hole[2]) > RESET_Z_THRES
 
-        terminate = x_cond or y_cond
+        terminate = x_cond or y_cond or z_cond
         if terminate:
-            print(f"Terminate due to moving away > x:{x_cond} y:{y_cond}")
+            print(f"Terminate due to moving away x:{x_cond} y:{y_cond} z:{z_cond}")
+            penalty += -5.0
 
         f_x, f_y, f_z, t_x, t_y, t_z = self.ur5e.get_wrist_ft_filtered()
         forces_in_tool0 = np.array([f_x, f_y, f_z])
@@ -167,10 +170,18 @@ class PegInsertionEnv(gym.Env):
         # check if force on Z is too much
         if not terminate:
             terminate = abs(forces_in_hole[2]) > RESET_FORCE_Z_THRES
+            if terminate:
+                penalty += -5.0
         
-        if forces_in_hole[2] >= 10.0:
-            force_penalty += -0.01
+        # xy_dist_2_hole = np.sqrt(arm_tip_pos_in_hole[0]**2 + arm_tip_pos_in_hole[1]**2)
+        # if xy_dist_2_hole <= 0.005:
+        #     torque_penalty = -np.linalg.norm(np.array(forces_in_hole[:2]))
+        #     print("Torque penalty proximity", torque_penalty)
+        #     force_penalty += torque_penalty
 
+        if forces_in_hole[2] < 0.0:
+            penalty += -0.1
+        
         # fx_cond = abs(forces_in_hole[0]) < 1.5
         # fy_cond = abs(forces_in_hole[1]) < 1.5
         # fz_cond = forces_in_hole[2] > 5.0
@@ -201,7 +212,7 @@ class PegInsertionEnv(gym.Env):
 
         observations = np.array(observations).astype(np.float32)
 
-        return copy.deepcopy(observations), terminate, success, force_penalty
+        return copy.deepcopy(observations), terminate, success, penalty
 
     def step(self, action):
         """
@@ -209,13 +220,10 @@ class PegInsertionEnv(gym.Env):
         """
 
         # Clip the action
+        raw_action = action.copy()
         action = np.clip(action, -1.0, 1.0) * self.action_scaler
         pad_action = np.zeros(7)  # delta_xyz, quat_orientation
         
-        if self._is_force_z_large():
-            print("Force z too large, set delta_z = 0")
-            action[2] = 0.0
-
         pad_action[:3] = action
 
         # Calculate the desired pose
@@ -227,10 +235,10 @@ class PegInsertionEnv(gym.Env):
 
         self.step_cnt += 1
 
-        obs, early_terminate, success, force_penalty = self._process_obs(action)
+        obs, early_terminate, success, penalty = self._process_obs(raw_action)
 
         done = early_terminate or success
-        rew = float(success) + force_penalty
+        rew = float(success) + penalty
 
         info = {}
 
