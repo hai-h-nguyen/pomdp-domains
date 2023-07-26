@@ -8,9 +8,7 @@ cd ~/./ur_environment/
 - Close gradually until the peg is correctly held and then close 100%
 
 3. Launch the ros script
-```
-roslaunch tactile_feedback_control system_bringup.launch
-```
+```roslaunch tactile_feedback_control system_bringup.launch```
 
 4. Loading and start running ROS_driver on the pendant
 
@@ -18,16 +16,12 @@ roslaunch tactile_feedback_control system_bringup.launch
 ```python pdomains/robot_utils/ft_filter.py -t "wrench" -z```
 
 6. Start the red detector node
+```python pdomains/robot_utils/red_detector_publisher.py```
 
+7. Publish the hole coordinate:
+```rosrun tf static_transform_publisher 0.01 -0.522 0.117 0 0 0 base hole_coordinate 100```
 
-6. Publish the hole coordinate:
-```
-rosrun tf static_transform_publisher 0.01 -0.522 0.117 0 0 0 base hole_coordinate 100
-```
+8. Run rviz with the saved configuration
+```rviz```
 
-7. Run rviz with the saved configuration
-```
-rviz
-```
-
-8. Run the script (must copied into ur_environment/catkin_ws/src)
+9. Run the script (must copied into ur_environment/catkin_ws/src)
