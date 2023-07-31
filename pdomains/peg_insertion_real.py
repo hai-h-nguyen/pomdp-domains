@@ -52,7 +52,7 @@ class PegInsertionEnv(gym.Env):
         self.ur5e.switch_controllers("moveit")
 
         self.speed_normal = 0.01
-        self.speed_slow   = 0.005
+        self.speed_slow   = 0.006
 
         self.step_cnt = 0
 
