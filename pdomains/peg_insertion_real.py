@@ -52,7 +52,7 @@ class PegInsertionEnv(gym.Env):
         self.ur5e.switch_controllers("moveit")
 
         self.speed_normal = 0.01
-        self.speed_slow   = 0.006
+        self.speed_slow   = 0.005
 
         self.step_cnt = 0
 
@@ -195,14 +195,18 @@ class PegInsertionEnv(gym.Env):
         # torque_success = tx_cond and ty_cond and tz_cond
         success = positional_success
 
-        if success:
-            visual_success = not self.ur5e.is_detect_red()
-            success = success and visual_success
+        force_mag = np.linalg.norm(forces_in_hole)
+        theta = np.arccos(forces_in_hole[2]/force_mag)
 
         if success:
-            print(f"Succeed! w/ {forces_in_hole} {arm_tip_pos_in_hole} {torques_in_hole}")
+            visual_success = not self.ur5e.is_detect_red()
+            success = success and visual_success and (theta*57.3 < 30.0)
+
+        if success:
+            print(f"Succeed! w/ {forces_in_hole} {arm_tip_pos_in_hole} {torques_in_hole} {theta*57.3}")
         else:
-            print(self.step_cnt, action, arm_tip_pos_in_hole, forces_in_hole, torques_in_hole)
+            print(self.step_cnt, action, arm_tip_pos_in_hole,
+                  forces_in_hole, torques_in_hole, round(theta*57.3, 1))
 
         norm_forces_in_hole = np.array(forces_in_hole) / FORCE_NORMALIZER
         norm_torques_in_hole = np.array(torques_in_hole) / TORQUE_NORMALIZER
