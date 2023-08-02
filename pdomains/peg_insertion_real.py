@@ -81,7 +81,7 @@ class PegInsertionEnv(gym.Env):
         if self._is_force_z_large():
             print("Go up to relax")
             current_pose = self.ur5e.get_cartesian_state()
-            current_pose[2] += 0.02
+            current_pose[2] += 0.01
             self.ur5e.go_to_cartesian_pose(current_pose, speed=self.speed_normal)
 
         print("Go to right above hole center using the current height")
