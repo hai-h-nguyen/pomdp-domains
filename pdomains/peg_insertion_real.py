@@ -84,6 +84,8 @@ class PegInsertionEnv(gym.Env):
             current_pose[2] += 0.01
             self.ur5e.go_to_cartesian_pose(current_pose, speed=self.speed_normal)
 
+        # print(self.ur5e.get_cartesian_state())
+        # breakpoint()
         print("Go to right above hole center using the current height")
         current_height = self.ur5e.get_cartesian_state()[2]
         temp_center_hose = np.copy(HOLE_CENTER_POSE)
