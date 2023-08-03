@@ -72,7 +72,7 @@ class PegInsertionEnv(gym.Env):
 
         self.print_ft_once = False
 
-    def reset(self):
+    def reset(self, eval=False):
         """
         Go to a random position that touches the hole (to reduce the vibration)
         """
@@ -101,15 +101,19 @@ class PegInsertionEnv(gym.Env):
         self.print_ft_once = False
 
         print("Go to random position")
-        random_pose = self._randomize_starting_pos(HOLE_CENTER_POSE)
+        random_pose = self._randomize_starting_pos(HOLE_CENTER_POSE, eval)
         self.ur5e.go_to_cartesian_pose(random_pose, speed=self.speed_slow)
 
         obs, _, _, _ = self._process_obs()
         return obs
 
-    def _randomize_starting_pos(self, hole_pose):
+    def _randomize_starting_pos(self, hole_pose, eval=False):
         random_angle = 2*np.pi*np.random.rand()
-        random_radius = HOLE_RADIUS + np.random.rand()*(OUTER_RADIUS - HOLE_RADIUS)
+        if eval:
+            hole_radius = 0.01
+        else:
+            hole_radius = HOLE_RADIUS
+        random_radius = hole_radius + np.random.rand()*(OUTER_RADIUS - hole_radius)
 
         random_x = hole_pose[0] + random_radius * np.sin(random_angle)
         random_y = hole_pose[1] + random_radius * np.cos(random_angle)
