@@ -52,7 +52,7 @@ class PegInsertionEnv(gym.Env):
         self.ur5e.switch_controllers("moveit")
 
         self.speed_normal = 0.01
-        self.speed_slow   = 0.005
+        self.speed_slow   = 0.006
 
         self.step_cnt = 0
 
@@ -110,7 +110,7 @@ class PegInsertionEnv(gym.Env):
     def _randomize_starting_pos(self, hole_pose, eval=False):
         random_angle = 2*np.pi*np.random.rand()
         if eval:
-            hole_radius = 0.01
+            hole_radius = 0.015
         else:
             hole_radius = HOLE_RADIUS
         random_radius = hole_radius + np.random.rand()*(OUTER_RADIUS - hole_radius)
