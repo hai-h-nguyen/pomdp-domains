@@ -24,11 +24,17 @@ and get ```self.ur5e.get_cartesian_state()```
 7. Determine the hole coodinate: move the peg to the end of the hole and look up for the transform:
 ```rosrun tf tf_echo /base /robotiq_85_flexwrist_tip_link_with_peg```
 
-7. Note that there will be coordinate changes a bit. robotiq_85_flexwrist_tip_link_with_peg needs to swap the axes to give
-the desired hole coordinate. After that, publish:
-```rosrun tf static_transform_publisher 0.012 -0.515 0.077 0.02 0.001 0.002 base hole_coordinate 100```
+7. Move to the peg to the end of the hole and
+```rosrun static_transform_publisher x y z yaw pitch roll frame_id child_frame_id period_in_ms```
+```rosrun tf static_transform_publisher 0.0 0.0 0.0 -1.57079632679 -1.57079632679 1.57079632679 robotiq_85_flexwrist_tip_link_with_peg desired_hole_coordinate 100``
+```rosrun tf tf_echo /base /desired_hole_coordinate```
 
-7. Get the offset z by print arm_tip_pos_in_hole before minus the offset when the peg is at the hole coordinate's origin
+7. Get the result to publish
+```rosrun tf static_transform_publisher 0.012 -0.515 0.077 0.02 0.001 0.002 base hole_coordinate 100``` (round)
+```rosrun tf static_transform_publisher 0.010 -0.517 0.087 0.02 0.001 0.001 base hole_coordinate 100``` (square)
+
+7. Get the offset z by print arm_tip_pos_in_hole before minus the offset when the peg is at the hole coordinate's origin: 
+need comment to not go to a random location, need to set the current tip2hole_offset_z in the yaml file to 0
 
 8. Run rviz with the saved configuration
 ```rviz```

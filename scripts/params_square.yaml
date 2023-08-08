@@ -1,0 +1,12 @@
+outer_radius: 0.03
+hole_radius: 0.01
+x_threshold: 0.01
+y_threshold: 0.01
+z_threshold: 0.0
+tip2hole_offset_z: 0.32636935
+force_normalizer: 30
+reset_fz_threshold: 10.0
+torque_normalizer: 0.5
+reset_xy_threshold: 0.06
+reset_z_threshold: 0.03
+hole_center_pose: [-0.010105590463309212, 0.5177058920769044, 0.4134516391208792, 0.6999462076370279, 0.7141951583377519, -0.0003080241756911484, 0.0006980992504872727]

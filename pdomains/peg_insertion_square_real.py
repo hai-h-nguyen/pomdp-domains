@@ -11,7 +11,7 @@ import pdomains.robot_utils.transform_utils as T
 from std_srvs.srv import Empty
 
 import yaml
-with open('/root/o2ac-ur/catkin_ws/src/hai_ws/pomdp-domains/scripts/params_round.yaml', 'r') as yml:
+with open('/root/o2ac-ur/catkin_ws/src/hai_ws/pomdp-domains/scripts/params_square.yaml', 'r') as yml:
     config = yaml.safe_load(yml)
 
 HOLE_CENTER_POSE = config["hole_center_pose"]
@@ -90,7 +90,8 @@ class PegInsertionEnv(gym.Env):
             current_pose = self.ur5e.get_cartesian_state()
             current_pose[2] += 0.01
             self.ur5e.go_to_cartesian_pose(current_pose, speed=self.speed_normal)
-
+        
+        # Use these two lines to get the hole pose
         # print(self.ur5e.get_cartesian_state())
         # breakpoint()
         print("Go to right above hole center using the current height")
@@ -143,6 +144,10 @@ class PegInsertionEnv(gym.Env):
         arm_tip_pose_in_world = T.pose2mat((arm_tip_xyz, arm_tip_rot))
         arm_tip_pose_in_hole = T.pose_in_A_to_pose_in_B(arm_tip_pose_in_world, self.world_in_hole)
         arm_tip_pos_in_hole, arm_tip_quat_in_hole = T.mat2pose(arm_tip_pose_in_hole)
+
+        # Use these two lines to get the hole pose
+        # print(arm_tip_pos_in_hole)
+        # breakpoint()
 
         arm_tip_pos_in_hole[2] -= TIP2HOLE_OFFSET_Z
 
