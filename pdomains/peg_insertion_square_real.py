@@ -146,7 +146,7 @@ class PegInsertionEnv(gym.Env):
         arm_tip_pos_in_hole, arm_tip_quat_in_hole = T.mat2pose(arm_tip_pose_in_hole)
 
         # Use these two lines to get the hole pose
-        # print(arm_tip_pos_in_hole)
+        # print(arm_tip_pos_in_hole[2])
         # breakpoint()
 
         arm_tip_pos_in_hole[2] -= TIP2HOLE_OFFSET_Z
