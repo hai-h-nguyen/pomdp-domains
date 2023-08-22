@@ -1,5 +1,5 @@
 outer_radius: 0.03
-hole_radius: 0.013
+hole_radius: 0.017
 x_threshold: 0.01
 y_threshold: 0.01
 z_threshold: 0.0

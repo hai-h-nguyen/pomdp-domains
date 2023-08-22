@@ -118,7 +118,7 @@ class PegInsertionEnv(gym.Env):
     def _randomize_starting_pos(self, hole_pose, eval=False):
         random_angle = 2*np.pi*np.random.rand()
         if eval:
-            hole_radius = 0.015
+            hole_radius = HOLE_RADIUS + 0.002
         else:
             hole_radius = HOLE_RADIUS
         random_radius = hole_radius + np.random.rand()*(OUTER_RADIUS - hole_radius)
